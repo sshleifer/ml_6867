@@ -1,3 +1,10 @@
+from __future__ import division
+import numpy as np
+import scipy.optimize as spo
+import pandas as pd
+from collections import defaultdict
+import pylab as pl
+
 data = pl.loadtxt('P1/parametersp1.txt')
 
 gaussMean = data[0,:]
@@ -5,11 +12,6 @@ gaussCov = data[1:3,:]
 
 quadBowlA = data[3:5,:]
 quadBowlb = data[5,:]
-from __future__ import division
-import numpy as np
-import scipy.optimize as spo
-import pandas as pd
-from collections import defaultdict
 
 np.set_printoptions(precision=4)
 
