@@ -46,8 +46,11 @@ c. compare SGD to BGD
 - tau parameter effects levels
 
 d. Mini-Batch
-SGD bounces around rather than continually approaching target.  
+    SGD bounces around rather than continually approaching target.  
 
+
+
+Problem 2: Linear Basis Function Regression 
 
 
 
