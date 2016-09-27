@@ -3,7 +3,6 @@ import funcy
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from sklearn.linear_model import LinearRegression, Lasso, LassoCV
 
 from code.helpers import *
 from code.constants import *
@@ -42,13 +41,16 @@ def _gradient_descent(func, deriv_func=None,
     print 'done in {} steps'.format(n)
     return cur_weights, pd.DataFrame(paths)
 
+
 def gradient_descent(*args, **kwargs):
+    '''call _gradient_descent and return optimal weights'''
     weights, _ = _gradient_descent(*args, **kwargs)
     return weights
 
+
 def numerical_gradient(x, f, h=0.00001):
-    '''Numerically evaluate the gradient of f at x'''
-    n  = len(x)
+    '''Numerically evaluate the gradient of f at x using central differences'''
+    n = len(x)
     out = np.zeros(len(x))
     assert not np.isnan(x).any()
     hfix =  2 * h
@@ -59,14 +61,13 @@ def numerical_gradient(x, f, h=0.00001):
         hminus[i] -= h
         out[i] = (f(hplus) - f(hminus)) / hfix
         assert not np.isnan(out[i]), 'out:{}, x:{}'.format(out, x)
-
     return out
 
 
-def SGD(init_weights=start_theta, stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
+def SGD(init_weights=np.array([5,5]), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
     '''Generic gradient descent function
     Args:
-  
+
         init_weights: initial weights
         lr: learning rate
         stop_crit: stopping criterion

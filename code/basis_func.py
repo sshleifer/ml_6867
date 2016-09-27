@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 import pandas as pd
 import random
@@ -7,6 +9,8 @@ import matplotlib as mpl
 from matplotlib import pylab as pl
 from ggplot import *
 from sklearn.linear_model import LinearRegression
+
+from code.gradient_descent import *
 
 data = pl.loadtxt('hw1code/P2/curvefittingp2.txt')
 
@@ -87,6 +91,22 @@ def cos_descent(M, X=X, Y=Y):
                             init_weights=start,
                             lr=1e-2)
 
+
+class BasisSearch(object):
+    
+    def __init__(self, X=X, Y=Y,M=3):
+        self.M = M
+        self.X = X
+        self.Xt = create_basis(X, M=M)
+        self.clf = LinearRegression().fit(self.Xt, Y)
+        self.coef = self.clf.coef_ 
+        self.yhat = self.clf.predict(self.Xt)
+        self.Y = Y
+        self.sse = np.sum((self.yhat - self.Y)**2)
+    
+    def plot(self):
+        return plotter(self.M)
+    
 if __name__ == '__main__':
     plotter(3)
     z_start = pd.Series({n: cos_descent(n) for n in range(1,9)})
