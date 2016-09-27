@@ -63,34 +63,35 @@ def numerical_gradient(x, f, h=0.00001):
     return out
 
 
-
-def SGD(init_weights=np.zeros(X.shape[0]), stop_crit=1e-6, h=1e-3, max_iter=1000):
+def SGD(init_weights=start_theta, stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
     '''Generic gradient descent function
     Args:
-
+  
         init_weights: initial weights
+        lr: learning rate
         stop_crit: stopping criterion
         h: step size for computing numerical gradient
+        max_iter: how many iterations before stopping
     '''
     count = 0; n = 0; f_call = 0;
     cur_weights = np.copy(init_weights)
     paths = defaultdict(list)
-    for i in range(len(X)):
+    for n in range(max_iter):
+        i = np.random.randint(0, len(X))
+        cur_lr = get_lr(n) * lr
         func = funcy.partial(j, i)
         local_value = func(cur_weights)
         gradient = numerical_gradient(cur_weights, func, h)
-        cur_weights = cur_weights - get_lr(i) * gradient
+        cur_weights = cur_weights - cur_lr * gradient
+        cur_weights = cur_weights - lr * gradient
         new_value = func(cur_weights)
         delta = abs((new_value - local_value))
         #print 'cur_weights:{}. local_value: {}, delta: {}'.format(cur_weights,  local_value, delta)
         paths['delta'].append(delta)
         paths['norm'].append(np.linalg.norm(gradient))
         paths['w0'].append(cur_weights[0])
-        paths['lr'].append(get_lr(i))
+        paths['lr'].append(get_lr(n))
         count = count + 1 if delta < stop_crit else 0
         #if count >= 3:break
-    print 'done in {} steps'.format()
+    print 'done in {} steps'.format(n)
     return cur_weights, pd.DataFrame(paths)
-
-if __name__ == '__main__':
-    print gradient_descent(f_gauss, deriv_func=d_gauss, lr=1e-9)
