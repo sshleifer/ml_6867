@@ -70,6 +70,25 @@ def gg(df):
 def plotter(M):
     return gg(plot_df(M=M)) + ggtitle('M={}'.format(M))
 
+truth = np.array([ 1.,  1.5,  0.,  0.,  0.,  0.,  0.,  0.,  ]) # coefficients 
+
+def create_cos_basis(X, M=1):
+    return np.matrix([np.cos(np.pi * i * X) for i in range(1,M+1)]).T
+
+
+def cos_descent(M, X=X, Y=Y):
+    Xcos = create_cos_basis(X, M=M)
+    def loss(w):
+        return np.sum((np.array(Xcos).dot(w) - Y)**2)
+    start = np.zeros(Xcos.shape[1])
+    #start [0] = 1.
+    #start[1] = 1.5
+    return gradient_descent(loss,
+                            init_weights=start,
+                            lr=1e-2)
 
 if __name__ == '__main__':
     plotter(3)
+    z_start = pd.Series({n: cos_descent(n) for n in range(1,9)})
+    zdf = z_start.apply(pd.Series).fillna(0)
+    print zdf
