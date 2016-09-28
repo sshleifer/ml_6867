@@ -4,8 +4,11 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from code.helpers import *
+from code.helpers import f_gauss, d_gauss, f_bowl, d_bowl, get_lr
 from code.constants import *
+
+X = pl.loadtxt('hw1code/P1/fittingdatap1_x.txt')
+y = pl.loadtxt('hw1code/P1/fittingdatap1_y.txt')
 
 def _gradient_descent(func, deriv_func=None,
                       init_weights=np.array([5,5]), lr=1, stop_crit=1e-6,
@@ -49,7 +52,6 @@ def gradient_descent(*args, **kwargs):
 
 def numerical_gradient(x, f, h=0.00001):
     '''Numerically evaluate the gradient of f at x using central differences'''
-    n = len(x)
     out = np.zeros(len(x))
     assert not np.isnan(x).any()
     hfix =  2 * h
@@ -104,9 +106,10 @@ def g_error(start, h=1e-3):
 
 
 def b_error(start, h=1e-3):
-    '''difference betwen numerical and analytical gradient for quadratic Bowl'''
+    '''Difference betwen numerical and analytical gradient for quadratic Bowl'''
     weights = np.array([start, start])
     return np.abs((numerical_gradient(weights, f_bowl, h=h) - d_bowl(weights))[0])
+
 
 if __name__ == '__main__':
     STEP_SIZES = [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
