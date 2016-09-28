@@ -37,4 +37,6 @@ def j(i,w):
     return np.sum((X[i].dot(w) - y[i])**2)
 
 
-
+def get_lr(t, tau = 1e-6, k =.5):
+    '''Learning rate for iteration t'''
+    return tau + (t+1) ** -k

@@ -38,7 +38,6 @@ def _gradient_descent(func, deriv_func=None,
         count = count + 1 if delta < stop_crit else 0
         if count >= 3:
             break
-    print 'done in {} steps'.format(n)
     return cur_weights, pd.DataFrame(paths)
 
 
@@ -64,7 +63,7 @@ def numerical_gradient(x, f, h=0.00001):
     return out
 
 
-def SGD(init_weights=np.array([5,5]), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
+def SGD(init_weights=np.zeros(X.shape[1]), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
     '''Generic gradient descent function
     Args:
 
