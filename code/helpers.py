@@ -37,18 +37,4 @@ def j(i,w):
     return np.sum((X[i].dot(w) - y[i])**2)
 
 
-def g_error(start, h=1e-3):
-    '''difference betwen numerical and analytical gradient for gaussian'''
-    weights = np.array([start, start])
-    return np.abs((numerical_gradient(weights, f_gauss, h=h) - d_gauss(weights))[0])
 
-
-def b_error(start, h=1e-3):
-    '''difference betwen numerical and analytical gradient for quadratic Bowl'''
-    weights = np.array([start, start])
-    return np.abs((numerical_gradient(weights, f_bowl, h=h) - d_bowl(weights))[0])
-
-
-STEP_SIZES = [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
-gauss_errors = pd.Series({h: g_error(9.995, h=h) for h in STEP_SIZES})
-bowl_errors = pd.Series({h: b_error(9.995, h=h) for h in STEP_SIZES})
