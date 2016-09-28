@@ -52,7 +52,8 @@ d. Mini-Batch
 
 Problem 2: Linear Basis Function Regression 
 1. Replicated Bishop Charts
-TODO
-2. compute SSE given W and M, write derivative of SSE function
+https://github.com/sshleifer/ml_6867/blob/master/figures/2.1M10.png
+2. Compute SSE given W and M, write derivative of SSE function
 3. Run BGD on SSE for values of M, discuss hyperparams. (NEED ANALYTICAL DERIVATIVE OF LOSS w.r.t M?)
-4. Cosine writeup 
+4. Cosine weights.
+Plots in figures/2.4_weights.png
