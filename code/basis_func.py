@@ -20,20 +20,8 @@ pts = np.array([[p] for p in pl.linspace(min(X), max(X), 100)])
 
 
 def create_basis(X, M=1):
-    return np.matrix([X**i for i in range(0,M+1)]).T
-
-def OLS(X=X, Y=Y, M=1):
-    '''Max likelihood weight vector'''
-    X_transformed =  create_basis(X, M=M)
-    return LinearRegression().fit(X_transformed, Y)
-
-def ypred(X=X, Y=Y, M=1, X2=None):
-    '''Max likelihood weight vector'''
-    X_transformed =  create_basis(X, M=M)
-    clf = LinearRegression().fit(X_transformed, Y)
-    return clf.predict(X_transformed)
-
-def coef(X=X, Y=Y, M=1): return OLS(X,Y, M).coef_
+    '''Create basis for polynomial'''
+    return np.array([X**i for i in range(0, M+1)]).T
 
 def actual_process(pts):
     return np.cos(np.pi*pts) + (1.5 * np.cos(2*np.pi*pts))
@@ -77,7 +65,7 @@ def plotter(M):
 truth = np.array([ 1.,  1.5,  0.,  0.,  0.,  0.,  0.,  0.,  ]) # coefficients
 
 def create_cos_basis(X, M=1):
-    return np.matrix([np.cos(np.pi * i * X) for i in range(1,M+1)]).T
+    return np.array([np.cos(np.pi * i * X) for i in range(1, M+1)]).T
 
 
 def cos_descent(M, X=X, Y=Y):
@@ -98,7 +86,7 @@ class BasisSearch(object):
         self.M = M
         self.X = X
         self.Xt = create_basis(X, M=M)
-        self.clf = LinearRegression().fit(self.Xt, Y)
+        self.clf = LinearRegression(fit_intercept=False).fit(self.Xt, Y)
         self.coef = self.clf.coef_
         self.yhat = self.clf.predict(self.Xt)
         self.Y = Y
@@ -109,7 +97,7 @@ class BasisSearch(object):
 
 if __name__ == '__main__':
     for M in [0, 1, 3, 10]:
-        plotter(M).save('../figures/2.1M{}.png'.format(M))
+        plotter(M).save('figures/2.1M{}.png'.format(M))
     print 'Saved charts for #2.1 to figures directory'
     z_start = pd.Series({n: cos_descent(n) for n in range(1, 9)})
     zdf = z_start.apply(pd.Series).fillna(0)
