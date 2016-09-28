@@ -82,7 +82,7 @@ def cos_descent(M, X=X, Y=Y):
 
 class BasisSearch(object):
 
-    def __init__(self, X=X, Y=Y,M=3):
+    def __init__(self, X=X, Y=Y, M=3):
         self.M = M
         self.X = X
         self.Xt = create_basis(X, M=M)

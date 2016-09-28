@@ -11,7 +11,7 @@ X = pl.loadtxt('hw1code/P1/fittingdatap1_x.txt')
 y = pl.loadtxt('hw1code/P1/fittingdatap1_y.txt')
 
 def _gradient_descent(func, deriv_func=None,
-                      init_weights=np.array([5,5]), lr=1, stop_crit=1e-6,
+                      init_weights=np.array([5.,5.]), lr=1, stop_crit=1e-6,
                       h=1e-3, max_iter=1000):
     '''Generic gradient descent function
     Args:
@@ -53,13 +53,15 @@ def gradient_descent(*args, **kwargs):
 def numerical_gradient(x, f, h=0.00001):
     '''Numerically evaluate the gradient of f at x using central differences'''
     out = np.zeros(len(x))
+    assert x.dtype == float
     assert not np.isnan(x).any()
-    hfix =  2 * h
+    assert h > 0
+    hfix = 2 * h
     for i in range(0, len(x)):
         hplus = np.copy(x)
         hminus = np.copy(x)
-        hplus[i] += h
-        hminus[i] -= h
+        hplus[i] = hplus[i] + h
+        hminus[i] = hminus[i] - h
         out[i] = (f(hplus) - f(hminus)) / hfix
         assert not np.isnan(out[i]), 'out:{}, x:{}'.format(out, x)
     return out
