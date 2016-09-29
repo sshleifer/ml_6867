@@ -28,16 +28,9 @@ def f_bowl(x, A=quadBowlA, b=quadBowlb):
 def d_bowl(x, func=None, h=None, A=quadBowlA, b=quadBowlb):
     return A.dot(x) - b
 
-X1 = pl.loadtxt('hw1code/P1/fittingdatap1_x.txt')
-Y1 = pl.loadtxt('hw1code/P1/fittingdatap1_y.txt')
-
 def J(X, y, w):
     return np.sum((X1.dot(w) - Y1)**2)
 
-
-def j(i,w):
-    '''Loss for one row of x, y'''
-    return np.sum((X1[i].dot(w) - Y1[i])**2)
 
 
 def get_lr(t, tau = 1e-6, k =.5):

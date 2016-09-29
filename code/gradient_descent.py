@@ -4,11 +4,8 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from code.helpers import f_gauss, d_gauss, f_bowl, d_bowl, get_lr, j#, j2
-from code.constants import *
-X1 = pl.loadtxt('hw1code/P1/fittingdatap1_x.txt')
-Y1 = pl.loadtxt('hw1code/P1/fittingdatap1_y.txt')
-
+from code.helpers import f_gauss, d_gauss, f_bowl, d_bowl, get_lr
+from code.constants import X1, Y1
 
 def _gradient_descent(func, deriv_func=None,
                       init_weights=np.array([5., 5.]), lr=1, stop_crit=1e-6,
@@ -24,8 +21,9 @@ def _gradient_descent(func, deriv_func=None,
         max_iter: how many iterations before stopping
     '''
     if deriv_func is None:
-        deriv_func  = numerical_gradient
-    count = 0; n = 0; f_call = 0;
+        deriv_func = numerical_gradient
+    count = 0
+    n = 0
     cur_weights = np.copy(init_weights)
     paths = defaultdict(list)
     for n in range(max_iter):
@@ -69,7 +67,8 @@ def numerical_gradient(x, f, h=0.00001):
     return out
 
 
-def SGD(loss_fn=j, init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5):
+def SGD(init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5,
+        X=np.copy(X1), Y=np.copy(Y1)):
     '''Generic gradient descent function
     Args:
 
@@ -79,11 +78,15 @@ def SGD(loss_fn=j, init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=1
         h: step size for computing numerical gradient
         max_iter: how many iterations before stopping
     '''
-    count = 0; n = 0
+    def loss_fn(i, w):
+        '''Loss for one row of x, y'''
+        return np.sum((X[i].dot(w) - Y[i])**2)
+    count = 0
+    n = 0
     cur_weights = np.copy(init_weights)
     paths = defaultdict(list)
     for n in range(max_iter):
-        i = np.random.randint(0, len(X1))
+        i = np.random.randint(0, len(X))
         cur_lr = get_lr(n) * lr
         func = funcy.partial(loss_fn, i)
         local_value = func(cur_weights)
@@ -92,13 +95,13 @@ def SGD(loss_fn=j, init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=1
         cur_weights = cur_weights - lr * gradient
         new_value = func(cur_weights)
         delta = abs((new_value - local_value))
-        #print 'cur_weights:{}. local_value: {}, delta: {}'.format(cur_weights,  local_value, delta)
+        # print 'cur_weights:{}. local_value: {}, delta: {}'.format(cur_weights,  local_value, delta)
         paths['delta'].append(delta)
         paths['norm'].append(np.linalg.norm(gradient))
         paths['w0'].append(cur_weights[0])
         paths['lr'].append(get_lr(n))
         count = count + 1 if delta < stop_crit else 0
-        if count >= 3:break
+        if count >= 3: break
     print 'done in {} steps'.format(n)
     return cur_weights, pd.DataFrame(paths)
 
@@ -119,5 +122,5 @@ if __name__ == '__main__':
     STEP_SIZES = [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
     gauss_errors = pd.Series({h: g_error(9.995, h=h) for h in STEP_SIZES})
     bowl_errors = pd.Series({h: b_error(9.995, h=h) for h in STEP_SIZES})
-    SGD()
+    print SGD()
     print gauss_errors, bowl_errors
