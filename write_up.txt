@@ -70,3 +70,16 @@ code in  notebook.
 4. Cosine weights are close but not identical to the true coefficients. Fitting a 9 parameter model to 11 variables of data results, as expected in over-fitting. The learned solution is has lower L2 loss than the true data generation process. We need a sparsity penalty to the loss function.
 Plots in figures/2.4_weights.png
 
+
+3.2
+Training on dataset A and testing on dataset B suggests a few options:
+-   a  model with M=1 pr M=2 and high lambda (roughly 9)
+-  
+1. Writeups
+2. #3 Not Done
+    
+
+He should start writing up whichever of mine he is using while I am on ground.
+I will send him latex for #2 and #3.
+
+
