@@ -79,7 +79,6 @@ Training on dataset A and testing on dataset B suggests a few options:
 2. #3 Not Done
     
 
-He should start writing up whichever of mine he is using while I am on ground.
 I will send him latex for #2 and #3.
 
 
