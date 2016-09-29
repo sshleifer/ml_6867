@@ -43,21 +43,14 @@ def plot_df(X=X, Y=Y, M=3):
 
 
 def gg(df):
-    theme_bw()
-    mpl.rcParams["figure.figsize"] = ".5, .5"
-    #mpl.rcParams['axes.facecolor']='b'
-    #gsize = theme_bw(rc={"figure.figsize": "2, 2"})
-    p = (ggplot(df, aes(x='axis', y='yhat')) +
-         # facet_wrap('M') +
+    return (ggplot(df, aes(x='axis', y='yhat')) +
            geom_line(color="red")  +
            geom_line(aes(y='true'), color='green', size=2) +
            geom_point(aes(x='X', y='Y',size=200), alpha=0.5) +
            xlim(-0, 1.) +
            xlab('X') +
            ylab('Y')
-        # +gsize()
         )
-    return p
 
 def plotter(M):
     return gg(plot_df(M=M)) + ggtitle('M={}'.format(M))
@@ -73,8 +66,6 @@ def cos_descent(M, X=X, Y=Y):
     def loss(w):
         return np.sum((np.array(Xcos).dot(w) - Y)**2)
     start = np.zeros(Xcos.shape[1])
-    #start [0] = 1.
-    #start[1] = 1.5
     return gradient_descent(loss,
                             init_weights=start,
                             lr=1e-2)

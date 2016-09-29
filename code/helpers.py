@@ -31,8 +31,6 @@ def d_bowl(x, func=None, h=None, A=quadBowlA, b=quadBowlb):
 def J(X, y, w):
     return np.sum((X1.dot(w) - Y1)**2)
 
-
-
-def get_lr(t, tau = 1e-6, k =.5):
+def get_lr(t, tau=1e-6, k=.5):
     '''Learning rate for iteration t'''
     return tau + (t+1) ** -k

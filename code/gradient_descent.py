@@ -7,6 +7,7 @@ from collections import defaultdict
 from code.helpers import f_gauss, d_gauss, f_bowl, d_bowl, get_lr
 from code.constants import X1, Y1
 
+
 def _gradient_descent(func, deriv_func=None,
                       init_weights=np.array([5., 5.]), lr=1, stop_crit=1e-6,
                       h=1e-3, max_iter=1000):
@@ -53,22 +54,23 @@ def numerical_gradient(x, f, h=0.00001):
     out = np.zeros(len(x))
     if x.dtype != float:
         x = x.astype(float)
+
     assert not np.isnan(x).any()
     assert h > 0
-    hfix = 2 * h
+    hfix = 2. * h
     for i in range(0, len(x)):
         hplus = np.copy(x)
         hminus = np.copy(x)
         hplus[i] = hplus[i] + h
         hminus[i] = hminus[i] - h
-        assert hminus[i] != x[i]
         out[i] = (f(hplus) - f(hminus)) / hfix
         assert not np.isnan(out[i]), 'out:{}, x:{}'.format(out, x)
+        #assert hminus[i] != x[i], 'hminus: {}, h:{}, x:{}'.format(hminus, h, x)
     return out
 
 
 def SGD(init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e-5,
-        X=np.copy(X1), Y=np.copy(Y1)):
+        X=np.copy(X1), Y=np.copy(Y1), lr_func=get_lr):
     '''Generic gradient descent function
     Args:
 
@@ -87,7 +89,7 @@ def SGD(init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e
     paths = defaultdict(list)
     for n in range(max_iter):
         i = np.random.randint(0, len(X))
-        cur_lr = get_lr(n) * lr
+        cur_lr = lr_func(n) * lr
         func = funcy.partial(loss_fn, i)
         local_value = func(cur_weights)
         gradient = numerical_gradient(cur_weights, func, h)
@@ -99,9 +101,10 @@ def SGD(init_weights=np.zeros(10), stop_crit=1e-3, h=1e-3, max_iter=10000, lr=1e
         paths['delta'].append(delta)
         paths['norm'].append(np.linalg.norm(gradient))
         paths['w0'].append(cur_weights[0])
-        paths['lr'].append(get_lr(n))
+        paths['lr'].append(lr_func(n))
         count = count + 1 if delta < stop_crit else 0
-        if count >= 3: break
+        if count >= 3:
+            break
     print 'done in {} steps'.format(n)
     return cur_weights, pd.DataFrame(paths)
 
