@@ -55,7 +55,12 @@ Problem 2: Linear Basis Function Regression
 https://github.com/sshleifer/ml_6867/blob/master/figures/2.1M10.png
 code in python/basis_func.py
 2. Compute SSE given W and M, write derivative of SSE function
-3. Run BGD on SSE for values of M, discuss hyperparams. (NEED ANALYTICAL DERIVATIVE OF LOSS w.r.t M?)
+code in  notebook.
+- Getting 0 error for fairly large step-sizes. 
+- Gradients are linear in X for a quadratic of any order, so analytical, numerical gradients are equal for all reasonable step sizes.
+
+3. Run BGD on SSE for values of M, discuss hyperparams.
+
 
 4. Cosine weights are close but not identical to the true coefficients. Fitting a 9 parameter model to 11 variables of data results, as expected in over-fitting. The learned solution is has lower L2 loss than the true data generation process. We need a sparsity penalty to the loss function.
 Plots in figures/2.4_weights.png
