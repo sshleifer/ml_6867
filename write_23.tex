@@ -23,9 +23,9 @@ If we assume that errors are normally distributed,  $Y \sim N(X\theta, \sigma^2)
 	\hat{\theta}_{OLS}=\hat{\theta}_{ML}=(\Phi^T \Phi)^{-1}\Phi^T Y
 \end{equation*}
 
-where $\Phi$ denotes the polynomial basis expansion of $X$, for order $M$.
+where $\Phi$ denotes the polynomial basis expansion of $X$ for order $M$.
 
-Below, we replicate Bishop's plots for $M$ = 0, 1, 3 and 10 using the aforementioned solution for the gradient.
+Below, we replicate Bishop's plots for $M$ = 0, 1, 3 and 10 using the aforementioned solution for the gradient and python's ggplot library.
 
 \begin{figure}[ht]
 	\centering
@@ -45,7 +45,7 @@ Below, we replicate Bishop's plots for $M$ = 0, 1, 3 and 10 using the aforementi
 		\includegraphics[width=1\linewidth, height=1.2in]{figures/M10.png}
 		\caption*{$M=10$}
 	\end{minipage}
-	\caption{Plots of polynomials having various orders $M$, in red, fitted to the the observed points, green curve represents the function that actually generated the data.} 
+	\caption{Plots of fitted functions for various orders $M$ in red. The green curve represents the function that actually generated the data.} 
 \end{figure}
 
 
@@ -62,7 +62,7 @@ with gradient
 
  which we verified with the central differences method for all values of $M$. We then compared the results of using Batch Gradient Descent and Stochastic Gradient Descent to find the optimal weights for different values of $M$. For BGD, learning rates between .02 and .06 converged for small values of $M$. For larger values of $M$,  learning rates had to be between .02 and .04 to get convergence.
  
- Using the Monro-Robbins learning schedule, where $k$ parameter impacts the steepness of the learning schedule, $\tau$ impacts the level of the learning rate, for SGD makes it difficult to directly compare learning rates between SGD and BGD, but, in general, SGD had to make many more iterations than BGD since it saw so much less data per iteration. Additionally, SGD needed a higher average learning rate to converge than BGD for all values of $M$.
+We used the Monro-Robbins learning schedule, where  the $k$ parameter impacts the steepness of the learning schedule and the $\tau$ impacts the level of the learning rate for SGD, which makes it difficult to directly compare learning rates between SGD and BGD, but, in general, SGD had to make many more iterations than BGD since it uses only one row per iteration, compared to BGD which uses the whole dataset. Additionally, SGD needed a higher average learning rate to converge than BGD for all values of $M$.
  Reducing SGD's stopping criteria reduce the probability of stopping, regardless of whether the algorithm is stuck at a local minima or at the target. For this reason, reducing the stopping criterion is dangerous. Luckily, the decreasing learning schedule means that the weight does not fluctuate wildly near convergence, even if it doesn't meet the desired stability. 
  
 
