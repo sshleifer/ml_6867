@@ -53,7 +53,7 @@ def gg(df):
         )
 
 def plotter(M):
-    return gg(plot_df(M=M)) + ggtitle('M={}'.format(M))
+    return gg(plot_df(M=M))
 
 truth = np.array([ 1.,  1.5,  0.,  0.,  0.,  0.,  0.,  0.,  ]) # coefficients
 
@@ -88,7 +88,7 @@ class BasisSearch(object):
 
 if __name__ == '__main__':
     for M in [0, 1, 3, 10]:
-        plotter(M).save('figures/2.1M{}.png'.format(M))
+        plotter(M).save('figures/M{}.png'.format(M))
     print 'Saved charts for #2.1 to figures directory'
     z_start = pd.Series({n: cos_descent(n) for n in range(1, 9)})
     zdf = z_start.apply(pd.Series).fillna(0)
