@@ -66,8 +66,7 @@ We used the Monro-Robbins learning schedule, where  the $k$ parameter impacts th
  Reducing SGD's stopping criteria reduce the probability of stopping, regardless of whether the algorithm is stuck at a local minima or at the target. For this reason, reducing the stopping criterion is dangerous. Luckily, the decreasing learning schedule means that the weight does not fluctuate wildly near convergence, even if it doesn't meet the desired stability. 
  
 
-To close our beautiful adventure with gradient descent, we tried to learn the optimal weights $\theta$ for the actual data generation process using different values of $M$. The results were very similar for all values of $M$. Below are the results for $M$=8.  The learned solution for all values of $M$ has lower MSE than the true weights,  we need to add a sparsity penalty to the loss function.
-
+To close our beautiful adventure with gradient descent, we tried to learn the optimal $\theta$ for the actual data generation process using different values of $M$. The results were very similar for all values of $M$., so we display the results for $M$=8.  The learned solution for all values of $M$ has lower MSE than the true weight, so we need either more data or a different loss function (maybe with a regularization parameter) to improve our result. 
 \begin{centering}
 \begin{table}
 \captionof{table}{2.4: Weights learned for Cosine Basic Expansion, M=8}
@@ -92,9 +91,9 @@ w\_8 &            0.02 &          0.0 \\
 
 \subsubsection*{Ridge Regression}
 
-Given the problems we faced for high values of M when learning the Cosine basis function, we will now add a regularization term  $\lambda$ to our loss function to push coefficients towards 0 and avoid overfitting. 
+Given the problems we faced for high values of M when learning the cosine basis function, we will now add a regularization term  $\lambda$ to our loss function to push coefficients towards 0 and avoid overfitting. 
 
-Let's now see how regression behaves when we impose a regularization term. The regularization term,, serves to make sure we don't overfit to our training data. 
+Let's now see how regression behaves when we impose a regularization term, whicb serves to make sure we don't overfit to our training data. 
 
 The closed form solution for Ridge from Bishop equation 3.27
 \begin{equation}
