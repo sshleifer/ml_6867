@@ -31,10 +31,3 @@ class LogReg(object):
 
     def predict(self, X):
         return np.dot(X, self.coef_)
-
-
-def plot_gauss(sp=np.linspace(-10,10,100)):
-    '''useless'''
-    gres = pd.DataFrame({y: {x: gaussian_kernel(x, y) for x in sp} for y in sp})
-    w = gres.stack().rename_axis(['x', 'y']).to_frame(name='val').reset_index()
-    p = ggplot(w, aes(x='x', y='y', color='val')) + geom_point()
