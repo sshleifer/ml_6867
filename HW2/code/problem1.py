@@ -1,3 +1,4 @@
+from __future__ import division
 import funcy
 import numpy as np
 from scipy.optimize import minimize
@@ -20,8 +21,13 @@ def nll(X, Y, w, L=0., reg_func=l2_reg):
     return loss + penalty
 
 
+def sigmoid(x):
+    return 1. / (1 + np.exp(x))
+
+
 class LogReg(object):
     def __init__(self, reg_func=l2_reg, L=0.):
+        '''Assumes class labels are 1 and -1'''
         self.reg_func = reg_func
         self.L = L
 
@@ -30,4 +36,11 @@ class LogReg(object):
         return self
 
     def predict(self, X):
-        return np.dot(X, self.coef_)
+        return np.sign(np.dot(X, self.coef_))
+
+    def predict_proba(self, X):
+        return sigmoid(np.dot(X, self.coef_))
+
+    def score(self, X, y):
+        yhat = np.sign(self.predict(X))
+        return (yhat == y).mean()
