@@ -1,5 +1,5 @@
-import pdb
 from numpy import *
+import numpy as np
 import pylab as pl
 
 # X is data matrix (each row is a data point)
@@ -16,7 +16,9 @@ def plotDecisionBoundary(X, Y, scoreFn, values, title = ""):
     h = max((x_max-x_min)/200., (y_max-y_min)/200.)
     xx, yy = meshgrid(arange(x_min, x_max, h),
                       arange(y_min, y_max, h))
-    zz = scoreFN(c_[xx.ravel(), yy.ravel()])
+    Xt = c_[xx.ravel(), yy.ravel()]
+    return Xt
+    zz = scoreFN(Xt)
     zz = zz.reshape(xx.shape)
     pl.figure()
     CS = pl.contour(xx, yy, zz, values, colors = 'green', linestyles = 'solid', linewidths = 2)
@@ -25,3 +27,14 @@ def plotDecisionBoundary(X, Y, scoreFn, values, title = ""):
     pl.scatter(X[:, 0], X[:, 1], c=(1.-Y), s=50, cmap = pl.cm.cool)
     pl.title(title)
     pl.axis('tight')
+
+
+def make_fname(data=1, suffix='validate'):
+    return 'hw2_resources/data/data{}_{}.csv'.format(data, suffix)
+
+
+def read_in(data=1, suffix='validate'):
+    validate = np.loadtxt(make_fname(data, suffix))
+    X = validate[:, 0:2]
+    Y = np.ravel(validate[:, 2:3])
+    return X, Y
