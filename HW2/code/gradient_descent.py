@@ -7,7 +7,7 @@ from collections import defaultdict
 
 def gradient_descent(func, deriv_func=None,
                       init_weights=np.array([5., 5.]), lr=.1, stop_crit=1e-6,
-                      h=1e-3, max_iter=1000):
+                      h=1e-3, max_iter=10000):
     '''Generic gradient descent function
     Args:
         func: func whose gradient we compute
@@ -33,9 +33,11 @@ def gradient_descent(func, deriv_func=None,
         #print 'cur_weights:{}. local_value: {}, delta: {}'.format(cur_weights,  local_value, delta)
         paths['delta'].append(delta)
         paths['norm'].append(np.linalg.norm(gradient))
-        paths['w0'].append(cur_weights[0])
+        for i, w in enumerate(cur_weights):
+            paths['w{}'.format(i)].append(w)
         count = count + 1 if delta < stop_crit else 0
         if count >= 3:
+            print('stopping at {}'.format(n))
             break
     return cur_weights, pd.DataFrame(paths)
 
