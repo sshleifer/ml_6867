@@ -10,7 +10,7 @@ import pylab as pl
 def plotDecisionBoundary(X, Y, scoreFn, values, title = ""):
     # Plot the decision boundary. For that, we will asign a score to
     # each point in the mesh [x_min, m_max]x[y_min, y_max].
-    print 'here'
+    #print 'here'
     x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
     y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
     h = max((x_max-x_min)/200., (y_max-y_min)/200.)
