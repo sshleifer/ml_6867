@@ -65,7 +65,6 @@ def numerical_gradient(x, f, h=0.00001):
         hminus[i] = hminus[i] - h
         out[i] = (f(hplus) - f(hminus)) / hfix
         assert not np.isnan(out[i]), 'out:{}, x:{}'.format(out, x)
-        #assert hminus[i] != x[i], 'hminus: {}, h:{}, x:{}'.format(hminus, h, x)
     return out
 
 
