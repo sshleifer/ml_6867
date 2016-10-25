@@ -1,8 +1,9 @@
 import numpy as np
+from sklearn.linear_model import LogisticRegression
 import unittest
 
 
-from code.helpers import read_in
+from code.helpers import read_in, mnist_data
 from code.logistic_regression import LogReg, l1_reg
 from code.svm import SVMD, Pegasos
 
@@ -28,3 +29,8 @@ class TestHW2(unittest.TestCase):
         clf = Pegasos(L=1.).fit(self.X, self.y)
         clf_reg = Pegasos(L=100.).fit(self.X, self.y)
         self.assertGreater(np.sum(clf.coef_), np.sum(clf_reg.coef_))
+
+    def test_mnist_data(self):
+        bigx, bigy = mnist_data(0, 7)
+        clf = LogisticRegression().fit(bigx, bigy)
+

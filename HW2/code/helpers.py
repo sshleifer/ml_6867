@@ -1,5 +1,6 @@
 from numpy import *
 import numpy as np
+import pandas as pd
 import pylab as pl
 
 # X is data matrix (each row is a data point)
@@ -38,3 +39,23 @@ def read_in(data=1, suffix='validate'):
     X = validate[:, 0:2]
     Y = np.ravel(validate[:, 2:3])
     return X, Y
+
+
+base_path = 'hw2_resources/data/mnist_digit_{}.csv'
+
+def read_mnist(digit):
+    df = pd.read_csv(base_path.format(digit), header=None)[0]
+    return df.apply(lambda x: np.array(map(int, x.split(' ')))).apply(pd.Series).as_matrix()
+
+
+def mnist_data(digit_true, digit_false):
+    Xtrue = read_mnist(digit_true)
+    Xfalse = read_mnist(digit_false)
+    bigy = np.concatenate([
+        np.ones(Xtrue.shape[0]),
+        np.zeros(Xfalse.shape[0])
+    ])
+    bigx = np.vstack([Xtrue, Xfalse])
+    return bigx, bigy
+
+

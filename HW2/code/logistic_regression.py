@@ -35,17 +35,17 @@ class LogReg(object):
         '''Assumes class labels are 1 and -1'''
         self.reg_func = reg_func
         self.L = L
-        
+
     def logistic_loss(self, weights):
         return nll(self.X, self.y, weights, L=self.L, reg_func=self.reg_func)
 
     def fit(self, X, y):
         self.X = X
         self.y = y
-        #self.optim_ = minimize(self.logistic_loss, np.zeros(X.shape[1]))
-        #self.coef_ = self.optim_.x
-        self.coef_, self.optim_ = gradient_descent(self.logistic_loss,
-                                                   init_weights=np.zeros(X.shape[1]))
+        self.optim_ = minimize(self.logistic_loss, np.zeros(X.shape[1]))
+        self.coef_ = self.optim_.x
+        #self.coef_, self.optim_ = (self.logistic_loss,
+        #                                           init_weights=np.zeros(X.shape[1]))
         return self
 
     def predict(self, X):
@@ -57,3 +57,4 @@ class LogReg(object):
     def score(self, X, y):
         yhat = np.sign(self.predict(X))
         return (yhat == y).mean()
+
