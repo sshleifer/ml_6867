@@ -1,9 +1,10 @@
+import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import unittest
 
 
-from code.helpers import read_in, mnist_data
+from code.helpers import read_in, mnist_data, plot_ciupan_df
 from code.logistic_regression import LogReg, l1_reg
 from code.svm import SVMD, Pegasos
 
@@ -33,4 +34,6 @@ class TestHW2(unittest.TestCase):
     def test_mnist_data(self):
         bigx, bigy = mnist_data(0, 7)
         clf = LogisticRegression().fit(bigx, bigy)
-
+    def test_plots(self):
+        df = pd.read_csv('/Users/shleifer/Downloads/PB2Data.csv', index_col=0)
+        plot_ciupan_df(df)
