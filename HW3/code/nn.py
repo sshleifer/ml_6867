@@ -1,11 +1,16 @@
 import numpy as np
-# from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 
 def softmax(x):
     return np.max(x, 0)
 
 def dsigmoid(y): return 1.0 - y*y
+
+
+def dsoftmax(x):
+    return 1 if x > 0 else 0  # TODO(SS): is this right?
+
 
 # TODO(SS): Cross-entropy loss
 
@@ -24,7 +29,7 @@ class NN(object):
         self.z = np.zeros((nh + 2, n_inputs))
         self.a = np.zeros((nh + 2, n_inputs))
         self.w = np.ones((nh + 2, n_inputs))
-        # self.one_hot_y = OneHotEncoder(sparse=False).fit_transform(y)
+        self.sk_one_hot_y = OneHotEncoder(sparse=False).fit_transform(y)
         self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
 
         # Output shit
@@ -51,7 +56,8 @@ class NN(object):
             self.z[layer] = self.w[layer].T.dot(self.a[layer - 1])  # aggregate
             self.a[layer] = self.activate(self.z[layer])
         self.zo = self.wo.T.dot(self.a[layer])
-        return self.final_activate(self.zo)
+        self.ao = self.final_activate(self.zo)
+        return self.ao
 
     def fit(self, X, y):
         '''stochastically'''
@@ -62,9 +68,18 @@ class NN(object):
             loss = -np.sum(target * np.log(predicted_probas))
             self.backprop(loss)
 
-    def backprop(self, error):
-        :0
-        raise NotImplementedError
-        # pseudocode
+    def backprop(self, error, lr=1.):
+        '''Propagate error back through net work and update weights'''
+        output_deltas = dsigmoid(self.ao) * error
+        self.wo += (output_deltas * self.ao) * lr
+
+        next_deltas = output_deltas  # TODO(SS): definitely wrong
+        hidden_deltas = np.zeros((self.nh + 2, self.n_inputs))
+        for layer in range(self.nh + 2, 1):
+            error = np.sum(next_deltas[layer] * self.w[layer])
+            hidden_deltas[layer] = dsoftmax(self.a[layer]) * error
+            # update hidden
+            self.w[layer] = (hidden_deltas[layer] * self.a[layer]) * lr
+
 
 
