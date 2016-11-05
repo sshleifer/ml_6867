@@ -5,13 +5,17 @@ from sklearn.preprocessing import OneHotEncoder
 def softmax(x):
     return np.max(x, 0)
 
-def dsigmoid(y): return 1.0 - y*y
+def dsigmoid(y):
+    return 1.0 - y*y
 
 
 def dsoftmax(x):
     return 1 if x > 0 else 0  # TODO(SS): is this right?
 
 
+
+# TODO(SS): dsoftmax?
+# TODO(SS): better testing
 # TODO(SS): Cross-entropy loss
 
 
@@ -78,8 +82,4 @@ class NN(object):
         for layer in range(self.nh + 2, 1):
             error = np.sum(next_deltas[layer] * self.w[layer])
             hidden_deltas[layer] = dsoftmax(self.a[layer]) * error
-            # update hidden
             self.w[layer] = (hidden_deltas[layer] * self.a[layer]) * lr
-
-
-
