@@ -8,7 +8,7 @@ df = pd.read_csv('hw3_resources/data/data_3class.csv', header=None, sep=' ')
 X = df[[0, 1]].as_matrix()
 y = df[2].as_matrix()
 n_classes = len(np.unique(y))
-nn = NN(X, y, epochs=3)
+nn = NN(X, y)
 
 
 class TestNN(unittest.TestCase):
