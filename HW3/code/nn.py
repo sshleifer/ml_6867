@@ -11,7 +11,7 @@ def dsigmoid(y):
 
 
 def dsoftmax(x):
-    return 1 if x > 0 else 0  # TODO(SS): is this right?
+    return np.clip(np.sign(x), 0, 1)
 
 
 def stable_softmax(x):
@@ -51,15 +51,11 @@ class NN(object):
         self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
 
         # Output shit
-        #self.output = np.zeros(no)
         self.wo = np.ones((hidden_nodes, self.n_outputs))
         self.bo = np.zeros(self.n_outputs)
         self.zo = np.zeros(self.n_outputs)
 
-        self.n_layers = nh + 2
         self.activate = activation_func
-        self.bias = np.zeros(nh)
-        self.d = np.array((nh, n_inputs, nh))  # matrix of errors for each layer
 
     @staticmethod
     def final_activate(z):
@@ -86,7 +82,6 @@ class NN(object):
         for epoch in range(self.epochs):
             i = np.random.randint(0, len(X))
             x, target = X[i], self.one_hot_y[i]
-            print x, target
             predicted_probas = self.feedforward(x)
             loss = target - predicted_probas
             self.backprop(loss)
@@ -113,7 +108,7 @@ class NN(object):
         # a_reshape.dot(err_reshape)
         assert updates.shape == self.wo.shape
         self.wo = self.wo - updates * lr
-        print self.wo
+
         deltas = [error]
         for layer in reversed(range(1, self.L)):
             last_w = self.w[layer + 1] if layer < self.nh + 1 else self.wo
@@ -123,7 +118,6 @@ class NN(object):
             # above is 2 element array
             assert new_delta.shape == (self.n_hidden_nodes,)
             updates = self._updates(self.a[layer - 1], new_delta) * lr
-            print updates
             #updates = self.a[layer - 1].dot(new_delta.T) * lr# should be of shape W
             assert updates.shape == self.w[layer].shape
             self.w[layer] = self.w[layer] - updates
