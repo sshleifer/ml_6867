@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
+# from scipy.misc import derivative
 
 
 def softmax(x):
@@ -13,8 +14,15 @@ def dsoftmax(x):
     return 1 if x > 0 else 0  # TODO(SS): is this right?
 
 
+def stable_softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
+
 
 # TODO(SS): dsoftmax?
+# TODO(SS): bias at each layer
 # TODO(SS): better testing
 # TODO(SS): Cross-entropy loss
 
@@ -53,7 +61,7 @@ class NN(object):
     def final_activate(z):
         return np.exp(z) / np.sum(np.exp(z))
 
-    def predict(self, x=None):
+    def _predict_row(self, x):
         '''pass one x row through the network'''
         self.a[0] = x
         for layer in range(1, self.nh + 2):
@@ -63,23 +71,27 @@ class NN(object):
         self.ao = self.final_activate(self.zo)
         return self.ao
 
+    def predict_probas(self, X):
+        return np.apply_along_axis(self._predict_row, 1, X)
+
     def fit(self, X, y):
         '''stochastically'''
         for epoch in range(self.epochs):
             i = np.random.randint(0, len(X))
             x, target = X[i], self.one_hot_y[i]
-            predicted_probas = self.predict(x)
-            loss = -np.sum(target * np.log(predicted_probas))
+            predicted_probas = self._predict_row(x)
+            loss = target - predicted_probas
             self.backprop(loss)
 
     def backprop(self, error, lr=1.):
         '''Propagate error back through net work and update weights'''
-        output_deltas = dsigmoid(self.ao) * error
-        self.wo += (output_deltas * self.ao) * lr
-
-        next_deltas = output_deltas  # TODO(SS): definitely wrong
-        hidden_deltas = np.zeros((self.nh + 2, self.n_inputs))
-        for layer in range(self.nh + 2, 1):
-            error = np.sum(next_deltas[layer] * self.w[layer])
-            hidden_deltas[layer] = dsoftmax(self.a[layer]) * error
-            self.w[layer] = (hidden_deltas[layer] * self.a[layer]) * lr
+        #delta = np.zeros((self.nh + 2, self.n_inputs))
+        # import ipdb; ipdb.set_trace()
+        deltas = [error]
+        #delta[-1] = np.diag(map(dsoftmax, self.zo)).dot(dsigmoid(self.ao) * error)
+        self.wo += (deltas[-1] * self.ao) * lr
+        for layer in range(self.nh + 1, 1):
+            last_w = self.w[layer + 1] if layer < self.nh + 1 else self.wo
+            new_delta = np.diag(map(dsoftmax, self.z[layer])).dot(last_w).dot(deltas[-1])
+            deltas.append(new_delta)
+            self.w[layer] += lr * self.a[layer + 1].dot(new_delta.T)

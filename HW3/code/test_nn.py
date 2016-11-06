@@ -14,10 +14,11 @@ nn = NN(X, y, epochs=2, no=n_classes)
 class TestNN(unittest.TestCase):
 
     def test_predict(self):
-        output = nn.predict(X[1])
+        output = nn._predict_row(X[1])
         self.assertEqual(len(output), len(np.unique(y)))
-
 
     def test_backprop(self):
         nn.fit(X, y)
-
+        predicted_probas = nn.predict_probas(X)
+        import ipdb; ipdb.set_trace()
+        self.assertEqual(predicted_probas.shape, nn.one_hot_y.shape)
