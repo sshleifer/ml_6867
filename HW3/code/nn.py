@@ -1,5 +1,5 @@
 import numpy as np
-
+np.random.seed(4)
 
 def relu(x):
     return np.clip(x, 0, None)
@@ -19,9 +19,12 @@ def stable_softmax(x):
 
 def assert_no_nans(struct):
     if isinstance(struct, dict):
-        assert not np.isnan(struct.values()).any()
+        ret_val = np.isnan(struct.values()).any()
     else:
-        assert not np.isnan(struct).any()
+        ret_val = np.isnan(struct).any()
+    if ret_val:
+        raise AssertionError(struct)
+        #import ipdb; ipdb.set_trace()
 
 
 # TODO(SS): better testing
@@ -48,7 +51,9 @@ class NN(object):
         self.z = np.zeros((self.L, hidden_nodes))
         self.b = np.zeros((self.L, hidden_nodes))
         self.a = np.zeros((self.L, hidden_nodes))
-        self.w = {}#np.ones((self.L, hidden_nodes))
+        self.w = {}
+        for layer in range(1, self.L):
+            self.w[layer] = np.random.normal(scale=.5, size=(len(self.a[layer - 1]), len(self.z[layer])))
         self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
 
         # Output shit
@@ -60,15 +65,12 @@ class NN(object):
 
     @staticmethod
     def final_activate(z):
-        return np.exp(z) / np.sum(np.exp(z))
+        return stable_softmax(z) #jlksjnp.exp(z) / np.sum(np.exp(z))
 
     def feedforward(self, x):
         '''pass one x row through the network'''
         self.a[0] = x
         for layer in range(1, self.L):
-            if layer not in self.w:
-                # self.w[layer] = np.ones((len(self.a[layer - 1]), len(self.z[layer])))
-                self.w[layer] = np.random.rand(len(self.a[layer - 1]), len(self.z[layer]))
             assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
             self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer]# aggregate
             self.a[layer] = self.activate(self.z[layer])
@@ -76,19 +78,36 @@ class NN(object):
         self.ao = self.final_activate(self.zo)
         return self.ao
 
+    def _derivable(self, x, fake_layer):
+        '''pass one x row through the network'''
+        self.a[0] = x
+        wo = fake_layer.reshape(2, 3)
+        for layer in range(1, self.L):
+            #if layer == 1:
+            #    self.w[layer] = fake_layer
+            if layer not in self.w:
+                # self.w[layer] = np.ones((len(self.a[layer - 1]), len(self.z[layer])))
+                self.w[layer] = np.random.normal(scale=1., size=(len(self.a[layer - 1]), len(self.z[layer])))
+            assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
+            self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer]# aggregate
+            self.a[layer] = self.activate(self.z[layer])
+        return self.final_activate(wo.T.dot(self.a[layer]) + self.bo)[1]
+
     def predict_probas(self, X):
         return np.apply_along_axis(self.feedforward, 1, X)
 
     def fit(self, X, y):
         '''stochastically'''
-        for epoch in range(self.epochs):
+        for epoch in range(1, self.epochs):
             i = np.random.randint(0, len(X))
             x, target = X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
+            print predicted_probas
             assert_no_nans(predicted_probas)
-            loss = target - predicted_probas
-            self.backprop(loss)
-            # cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)
+            loss = predicted_probas - target
+            print 'EPOCH: {}, loss = {}'.format(epoch, loss)
+            deltas = self.backprop(loss, lr= .1/float(epoch))
+            #cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)
             #print cross_entropy_loss
             # self.backprop(cross_entropy_loss)
 
@@ -105,19 +124,20 @@ class NN(object):
     def backprop(self, error, lr=1.):
         '''Propagate error back through net work and update weights'''
         # delta[-1] = np.diag(map(dsoftmax, self.zo)).dot(dsigmoid(self.ao) * error)
-        self.bo -= error * lr
+        self.bo  = self.bo - (error * lr)
         #a_reshape = self.a[self.L - 1].reshape(self.wo.shape[0], 1)
         #err_reshape = error.reshape(self.wo.shape[1], 1).T
         updates = self._updates(self.a[self.L - 1], error)
         # a_reshape.dot(err_reshape)
         assert updates.shape == self.wo.shape
-        self.wo = self.wo - updates * lr
+        self.wo = self.wo - (updates * lr)
 
         deltas = [error]
         for layer in reversed(range(1, self.L)):
             last_w = self.w[layer + 1] if layer < self.nh + 1 else self.wo
             new_delta = np.diag(map(dsoftmax, self.z[layer])).dot(last_w).dot(deltas[-1])
-            self.b[layer] = self.b[layer] - new_delta
+            print 'Delta:', new_delta
+            self.b[layer] = self.b[layer] - (new_delta * lr)
 
             # above is 2 element array
             assert new_delta.shape == (self.n_hidden_nodes,)
