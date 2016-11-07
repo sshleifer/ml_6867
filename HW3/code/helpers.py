@@ -1,5 +1,11 @@
 import numpy as np
 
+
+def get_lr(t, tau=1e-6, k=.5):
+    '''Learning rate for iteration t'''
+    return tau + (t + 1) ** -k
+
+
 def relu(x):
     return np.clip(x, 0, None)
 

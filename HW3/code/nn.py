@@ -1,6 +1,7 @@
 import numpy as np
-from code.helpers import relu, dsoftmax, stable_softmax, assert_no_nans
+from code.helpers import relu, dsoftmax, stable_softmax, assert_no_nans, get_lr
 np.random.seed(4)
+
 
 
 class NN(object):
@@ -15,7 +16,8 @@ class NN(object):
         '''
         self.X = X
         self.y = y
-        self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
+        self.one_hot_y = np.array([[1 if yval == j else 0 for j in sorted(np.unique(y))]
+                                   for yval in y])
         self.activate = activation_func
         n_inputs = X.shape[1]
         self.epochs = epochs
@@ -87,14 +89,14 @@ class NN(object):
         self.cur_epoch = 0
         for epoch in range(1, self.epochs):
             self.cur_epoch = epoch
-            learning_rate = 1. / epoch
+            learning_rate = get_lr(epoch, k=1.) #max(1. / epoch, 1e-4)
             i = np.random.randint(0, len(self.X))
             x, target = self.X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
             assert_no_nans(predicted_probas)
             loss = predicted_probas - target
             self.backprop(loss, lr=learning_rate)
-            if epoch % 1000 == 0:
+            if epoch % max(1e3, self.epochs / 10) == 0:
                 print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
         return self
 
