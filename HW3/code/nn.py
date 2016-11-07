@@ -16,8 +16,10 @@ class NN(object):
         '''
         self.X = X
         self.y = y
-        self.one_hot_y = np.array([[1 if yval == j else 0 for j in sorted(np.unique(y))]
-                                   for yval in y])
+        classes = sorted(np.unique(y))
+        self.ymap = dict(enumerate(classes))
+        self.one_hot_y = np.array([[1 if yval == j else 0 for j in classes] for yval in y])
+
         self.activate = activation_func
         n_inputs = X.shape[1]
         self.epochs = epochs
@@ -51,6 +53,9 @@ class NN(object):
         self.zo = np.zeros(self.n_outputs)
 
         self.base_loss = self.score(self.X, self.one_hot_y)
+
+    def revy(self, labels):
+        return np.array([self.ymap.get(l) for l in labels])
 
     @staticmethod
     def final_activate(z):
@@ -112,7 +117,7 @@ class NN(object):
     def predict(self, X=None):
         if X is None:
             X = self.X
-        return np.argmax(self.predict_probas(X), axis=1)
+        return self.revy(np.argmax(self.predict_probas(X), axis=1))
 
     def accuracy(self, X=None, y=None):
         '''How often is highest predicted proba class the actual class'''

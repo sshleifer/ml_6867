@@ -1,3 +1,4 @@
+from code.hw2 import Dataset
 from code.nn import NN
 
 import numpy as np
@@ -59,4 +60,8 @@ class TestNN(unittest.TestCase):
                                nn.score(X, nn.one_hot_y), base_loss)
                            )
         self.assertGreater(nn.accuracy(), .5)
-    #TODO(SS): make sure possible to overfit
+
+    def test_linear_separable(self):
+        d = Dataset(1)
+        nn = NN(d.xtr, d.ytr, nh=1, n_hidden_nodes=1, epochs=1000).fit()
+        self.assertGreaterEqual(nn.accuracy(), .9)
