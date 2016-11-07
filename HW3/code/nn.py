@@ -41,7 +41,9 @@ class NN(object):
             n_inputs: # nodes per layer
             no: # outputs
         '''
+        self.X = X
         n_inputs = X.shape[1]
+        self.activate = activation_func
         self.epochs = epochs
         self.nh = nh
         self.L = nh + 1
@@ -65,13 +67,12 @@ class NN(object):
         assert len(self.w) == nh, 'more hidden weights than hidden layers'
 
         self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
-
         # Output shit
         self.wo = np.ones((hidden_nodes, self.n_outputs))
         self.bo = np.zeros(self.n_outputs)
         self.zo = np.zeros(self.n_outputs)
 
-        self.activate = activation_func
+        self.base_loss = self.score(self.X, self.one_hot_y)
 
     @staticmethod
     def final_activate(z):
@@ -82,7 +83,7 @@ class NN(object):
         self.a[0] = x
         for layer in range(1, self.L):
             assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
-            self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer]# aggregate
+            self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer] # aggregate
             self.a[layer] = self.activate(self.z[layer])
         self.zo = self.wo.T.dot(self.a[layer]) + self.bo
         self.ao = self.final_activate(self.zo)
@@ -95,9 +96,6 @@ class NN(object):
         for layer in range(1, self.L):
             if layer == layer_number:
                 self.w[layer] = fake_layer.reshape(self.n_hidden_nodes, self.n_hidden_nodes)
-            if layer not in self.w:
-                # self.w[layer] = np.ones((len(self.a[layer - 1]), len(self.z[layer])))
-                self.w[layer] = np.random.normal(scale=1., size=(len(self.a[layer - 1]), len(self.z[layer])))
             assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
             self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer]# aggregate
             self.a[layer] = self.activate(self.z[layer])
@@ -115,16 +113,19 @@ class NN(object):
             i = np.random.randint(0, len(X))
             x, target = X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
-            print predicted_probas
             assert_no_nans(predicted_probas)
             loss = predicted_probas - target
-            print 'EPOCH: {}, loss = {}'.format(epoch, loss)
+            if epoch % 100 == 0:
+                print 'EPOCH: {}, loss = {}'.format(epoch, loss)
             deltas = self.backprop(loss, lr=learning_rate)
             #cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)
             #print cross_entropy_loss
             # self.backprop(cross_entropy_loss)
-
-    def score(self, X, y):
+    def score(self, X=None, y=None):
+        if X is None:
+            X = self.X
+        if y is None:
+            y = self.one_hot_y
         predicted_probas = self.predict_probas(X)
         cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)  # 0 is perfect
         return cross_entropy_loss
@@ -141,7 +142,6 @@ class NN(object):
         #a_reshape = self.a[self.L - 1].reshape(self.wo.shape[0], 1)
         #err_reshape = error.reshape(self.wo.shape[1], 1).T
         updates = self._updates(self.a[self.L - 1], error)
-        print updates
         # a_reshape.dot(err_reshape)
         assert updates.shape == self.wo.shape
         self.wo = self.wo - (updates * lr)
@@ -156,12 +156,13 @@ class NN(object):
 
             # above is 2 element array
             assert new_delta.shape == (self.n_hidden_nodes,)
-            updates = self._updates(self.a[layer - 1], new_delta)
-            print 'Updates, ', updates * lr
+            updates = self._updates(self.a[layer - 1], new_delta) * lr
             #updates = self.a[layer - 1].dot(new_delta.T) * lr# should be of shape W
+            if np.max(np.abs(updates)) >= 1.:
+                #import ipdb; ipdb.set_trace()
+                raise ValueError('Updates large: {}'.format(updates))
             assert updates.shape == self.w[layer].shape
             assert_no_nans(updates)
             self.w[layer] = self.w[layer] - (updates * lr)
-            print self.w
             deltas.append(new_delta)
         return deltas
