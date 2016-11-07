@@ -39,7 +39,8 @@ class NN(object):
             self.a[layer] = np.zeros(self.n_hidden_nodes)
             prev_inputs = len(self.a[layer - 1])
             #self.w[layer] = np.ones((prev_inputs, len(self.z[layer])))
-            self.w[layer] = np.random.normal(scale=.5, size=(prev_inputs, len(self.z[layer])))
+            scale = .5 / np.sqrt(self.n_hidden_nodes)
+            self.w[layer] = np.random.normal(scale=scale, size=(prev_inputs, n_hidden_nodes))
         assert len(self.w) == nh, 'more hidden weights than hidden layers'
 
         # Output shit
@@ -83,7 +84,9 @@ class NN(object):
 
     def fit(self):
         '''stochastically'''
+        self.cur_epoch = 0
         for epoch in range(1, self.epochs):
+            self.cur_epoch = epoch
             learning_rate = 1. / epoch
             i = np.random.randint(0, len(self.X))
             x, target = self.X[i], self.one_hot_y[i]
@@ -135,8 +138,7 @@ class NN(object):
             weight_updates = self._updates(self.a[layer - 1], new_delta) * lr
             assert weight_updates.shape == self.w[layer].shape
             assert_no_nans(weight_updates)
-            if np.max(np.abs(weight_updates)) >= max(np.max(np.abs(self.w[layer])), 1):
-                # weight_updates = weight_updates * lr
-                raise ValueError('Updates large: {}, danger of explosion'.format(weight_updates))
+            if np.max(np.abs(weight_updates)) >= max(np.max(np.abs(self.w[layer])), 1e3):
+                raise ValueError('Updates large: {}, gradient explosion at epoch {}'.format(weight_updates, self.cur_epoch))
             self.w[layer] = self.w[layer] - weight_updates
             deltas.append(new_delta)
