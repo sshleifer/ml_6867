@@ -60,11 +60,8 @@ class NN(object):
                 self.a[layer] = np.zeros(self.n_inputs)
                 continue
 
-            if layer == 1:
-                prev_inputs = n_inputs
-            else:
-                prev_inputs = len(self.a[layer - 1])
-
+            self.a[layer] = np.zeros(self.n_hidden_nodes)
+            prev_inputs = len(self.a[layer - 1])
             #self.w[layer] = np.ones((prev_inputs, len(self.z[layer])))
             self.w[layer] = np.random.normal(scale=.5, size=(prev_inputs, len(self.z[layer])))
         assert len(self.w) == nh, 'more hidden weights than hidden layers'
@@ -84,7 +81,7 @@ class NN(object):
         '''pass one x row through the network'''
         self.a[0] = x
         for layer in range(1, self.L):
-            assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
+            # assert self.w[layer].shape == (self.n_hidden_nodes, self.n_hidden_nodes)
             self.z[layer] = self.w[layer].T.dot(self.a[layer - 1]) + self.b[layer] # aggregate
             self.a[layer] = self.activate(self.z[layer])
         self.zo = self.wo.T.dot(self.a[layer]) + self.bo
@@ -163,6 +160,7 @@ class NN(object):
             assert weight_updates.shape == self.w[layer].shape
             assert_no_nans(weight_updates)
             if np.max(np.abs(weight_updates)) >= max(np.max(np.abs(self.w[layer])), 1):
-                raise ValueError('Updates large: {}, danger of explosion'.format(updates))
+                # weight_updates = weight_updates * lr
+                raise ValueError('Updates large: {}, danger of explosion'.format(weight_updates))
             self.w[layer] = self.w[layer] - weight_updates
             deltas.append(new_delta)

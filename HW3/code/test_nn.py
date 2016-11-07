@@ -47,5 +47,5 @@ class TestNN(unittest.TestCase):
         self.assertGreater(nn.accuracy(), .5)
 
     def test_big_hidden(self):
-         nn = NN(X, y, nh=1, n_hidden_nodes=3).fit(X, y)
+         nn = NN(X, y, nh=1, n_hidden_nodes=3).fit()
 
