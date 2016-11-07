@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 from code.helpers import relu, dsoftmax, stable_softmax, assert_no_nans, get_lr
 np.random.seed(4)
@@ -102,7 +103,7 @@ class NN(object):
         for epoch in range(1, self.epochs):
             self.cur_epoch = epoch
             #learning_rate = get_lr(epoch, k=1.)
-            learning_rate = max(1. / epoch, 1e-3)
+            learning_rate = max(1. / epoch, 1. / len(self.X))
             i = np.random.randint(0, len(self.X))
             x, target = self.X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
@@ -113,7 +114,6 @@ class NN(object):
                 print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
                 if validate:
                     new_score = self.score_validation()
-                    print new_score
                     if new_score <= last_score or new_score == 1:
                         break
                     else:
@@ -161,10 +161,12 @@ class NN(object):
             new_delta = np.diag(map(dsoftmax, self.z[layer])).dot(last_w).dot(deltas[-1])
             assert new_delta.shape == (self.n_hidden_nodes,)
             self.b[layer] = self.b[layer] - (new_delta * lr)
-            weight_updates = self._updates(self.a[layer - 1], new_delta) * lr
+            weight_updates = np.clip(self._updates(self.a[layer - 1], new_delta) * lr, -1, 1)
             assert weight_updates.shape == self.w[layer].shape
             assert_no_nans(weight_updates)
             if np.max(np.abs(weight_updates)) >= max(np.max(np.abs(self.w[layer])), 1e3):
-                raise ValueError('Updates large: {}, gradient explosion at epoch {}'.format(weight_updates, self.cur_epoch))
+                weight_updates = weight_updates / 1e3
+                #raise ValueError('Updates large: {}, gradient explosion at epoch {}'.format(weight_updates, self.cur_epoch))
+
             self.w[layer] = self.w[layer] - weight_updates
             deltas.append(new_delta)
