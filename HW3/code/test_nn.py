@@ -7,7 +7,6 @@ import unittest
 df = pd.read_csv('hw3_resources/data/data_3class.csv', header=None, sep=' ')
 X = df[[0, 1]].as_matrix()
 y = df[2].as_matrix()
-n_classes = len(np.unique(y))
 
 
 class TestNN(unittest.TestCase):
@@ -57,7 +56,7 @@ class TestNN(unittest.TestCase):
         self.assertEqual(predicted_probas.shape, nn.one_hot_y.shape)
         self.assertGreater(base_loss, nn.score(X, nn.one_hot_y),
                            'training did not reduce loss {}, was {}'.format(
-                               nn.score(X, nn.one_hot_y), base_loss
-                           ))
+                               nn.score(X, nn.one_hot_y), base_loss)
+                           )
         self.assertGreater(nn.accuracy(), .5)
     #TODO(SS): make sure possible to overfit

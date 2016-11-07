@@ -107,13 +107,16 @@ class NN(object):
         cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)  # 0 is perfect
         return cross_entropy_loss
 
-    def accuracy(self, X=None, y=None):
+    def predict(self, X=None):
         if X is None:
             X = self.X
+        return np.argmax(self.predict_probas(X), axis=1)
+
+    def accuracy(self, X=None, y=None):
+        '''How often is highest predicted proba class the actual class'''
         if y is None:
             y = self.y
-        yhat = np.argmax(self.predict_probas(X), axis=1)
-        # import ipdb; ipdb.set_trace()
+        yhat = self.predict(X)
         accuracy = (yhat == y).mean()
         return accuracy
 
