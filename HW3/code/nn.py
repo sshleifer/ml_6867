@@ -30,7 +30,7 @@ def assert_no_nans(struct):
 class NN(object):
     '''Neural Network Implementation'''
 
-    def __init__(self, X, y, nh=2, hidden_nodes=2, activation_func=relu, epochs=100):
+    def __init__(self, X, y, nh=2, n_hidden_nodes=2, activation_func=relu, epochs=100):
         '''Neural Network Implementation
         Args:
             nh: # hidden layers
@@ -46,11 +46,11 @@ class NN(object):
         self.nh = nh
         self.L = nh + 1
         self.n_inputs = n_inputs
-        self.n_hidden_nodes = hidden_nodes
+        self.n_hidden_nodes = n_hidden_nodes
         self.n_outputs = len(np.unique(y))
-        self.z = np.zeros((self.L, hidden_nodes))
-        self.b = np.zeros((self.L, hidden_nodes))
-        self.a = np.zeros((self.L, hidden_nodes))
+        self.z = np.zeros((self.L, n_hidden_nodes))
+        self.b = np.zeros((self.L, n_hidden_nodes))
+        self.a = np.zeros((self.L, n_hidden_nodes))
 
         self.w = {}
         #self.w[0] = np.ones(*
@@ -65,7 +65,7 @@ class NN(object):
         assert len(self.w) == nh, 'more hidden weights than hidden layers'
 
         # Output shit
-        self.wo = np.ones((hidden_nodes, self.n_outputs))
+        self.wo = np.ones((n_hidden_nodes, self.n_outputs))
         self.bo = np.zeros(self.n_outputs)
         self.zo = np.zeros(self.n_outputs)
 
@@ -103,18 +103,19 @@ class NN(object):
     def predict_probas(self, X):
         return np.apply_along_axis(self.feedforward, 1, X)
 
-    def fit(self, X, y):
+    def fit(self):
         '''stochastically'''
         for epoch in range(1, self.epochs):
             learning_rate = 1. / epoch
-            i = np.random.randint(0, len(X))
-            x, target = X[i], self.one_hot_y[i]
+            i = np.random.randint(0, len(self.X))
+            x, target = self.X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
             assert_no_nans(predicted_probas)
             loss = predicted_probas - target
             self.backprop(loss, lr=learning_rate)
-            if epoch % 100 == 0:
-                print 'EPOCH: {}, loss = {}'.format(epoch, loss)
+            if epoch % 1000 == 0:
+                print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
+        return self
 
     def score(self, X=None, y=None):
         if X is None:
