@@ -42,8 +42,10 @@ class NN(object):
             no: # outputs
         '''
         self.X = X
-        n_inputs = X.shape[1]
+        self.y = y
+        self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
         self.activate = activation_func
+        n_inputs = X.shape[1]
         self.epochs = epochs
         self.nh = nh
         self.L = nh + 1
@@ -66,7 +68,6 @@ class NN(object):
             self.w[layer] = np.random.normal(scale=.5, size=(prev_inputs, len(self.z[layer])))
         assert len(self.w) == nh, 'more hidden weights than hidden layers'
 
-        self.one_hot_y = np.array([[1 if yval == j else 0 for j in np.unique(y)] for yval in y])
         # Output shit
         self.wo = np.ones((hidden_nodes, self.n_outputs))
         self.bo = np.zeros(self.n_outputs)
@@ -90,7 +91,7 @@ class NN(object):
         return self.ao
 
     def _derivable_loss(self, x, y, fake_layer, layer_number):
-        '''pass one x row through the network'''
+        '''For debugging gradients'''
         self.a[0] = x
         wo = self.wo #fake_layer.reshape(2, 3)
         for layer in range(1, self.L):
@@ -115,12 +116,10 @@ class NN(object):
             predicted_probas = self.feedforward(x)
             assert_no_nans(predicted_probas)
             loss = predicted_probas - target
+            self.backprop(loss, lr=learning_rate)
             if epoch % 100 == 0:
                 print 'EPOCH: {}, loss = {}'.format(epoch, loss)
-            deltas = self.backprop(loss, lr=learning_rate)
-            #cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)
-            #print cross_entropy_loss
-            # self.backprop(cross_entropy_loss)
+
     def score(self, X=None, y=None):
         if X is None:
             X = self.X
@@ -129,6 +128,16 @@ class NN(object):
         predicted_probas = self.predict_probas(X)
         cross_entropy_loss = -np.sum(np.log(predicted_probas) * y)  # 0 is perfect
         return cross_entropy_loss
+
+    def accuracy(self, X=None, y=None):
+        if X is None:
+            X = self.X
+        if y is None:
+            y = self.y
+        yhat = np.argmax(self.predict_probas(X), axis=1)
+        #import ipdb; ipdb.set_trace()
+        accuracy = (yhat == y).mean()
+        return accuracy
 
     def _updates(self, last_a, delta):
         a_reshape = last_a.reshape(last_a.shape[0], 1)
@@ -160,7 +169,8 @@ class NN(object):
             #updates = self.a[layer - 1].dot(new_delta.T) * lr# should be of shape W
             if np.max(np.abs(updates)) >= 1.:
                 #import ipdb; ipdb.set_trace()
-                raise ValueError('Updates large: {}'.format(updates))
+                # raise ValueError('Updates large: {}'.format(updates))
+                continue
             assert updates.shape == self.w[layer].shape
             assert_no_nans(updates)
             self.w[layer] = self.w[layer] - (updates * lr)

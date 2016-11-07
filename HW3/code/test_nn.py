@@ -44,4 +44,4 @@ class TestNN(unittest.TestCase):
                            'training did not reduce loss {}, was {}'.format(
                                nn.score(X, nn.one_hot_y), base_loss
                            ))
-   # import ipdb; ipdb.set_trace()
+        self.assertGreater(nn.accuracy(), .5)
