@@ -16,9 +16,9 @@ class NN(object):
         '''
         self.X = X
         self.y = y
-        classes = sorted(np.unique(y))
-        self.ymap = dict(enumerate(classes))
-        self.one_hot_y = np.array([[1 if yval == j else 0 for j in classes] for yval in y])
+        self.classes = sorted(np.unique(y))
+        self.ymap = dict(enumerate(self.classes))
+        self.one_hot_y = np.array([[1 if yval == j else 0 for j in self.classes] for yval in y])
 
         self.activate = activation_func
         n_inputs = X.shape[1]
@@ -56,10 +56,14 @@ class NN(object):
 
     def revy(self, labels):
         return np.array([self.ymap.get(l) for l in labels])
+
     def onehot(self, y):
-        invmap = {v: k for k,v in self.ymap.items()}
-        self.one_hot_y = np.array([[1 if yval ==  else 0 for j in classes] for yval in y])
-        return np.array([invmap.get(l) for l in labels])
+        return np.array([[1 if yval == j  else 0 for j in self.classes] for yval in y])
+
+
+
+    def score_validation(self):
+        return self.accuracy(self.data.Xv, self.data.yv)
 
 
     @staticmethod
@@ -108,6 +112,13 @@ class NN(object):
             self.backprop(loss, lr=learning_rate)
             if epoch % max(1e3, self.epochs / 10) == 0:
                 print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
+                if validate:
+                    new_score = self.score_validation()
+                    if new_score < last_score:
+                        break
+                    else:
+                        last_score = new_score
+
         return self
 
     def score(self, X=None, y=None):
@@ -128,7 +139,6 @@ class NN(object):
         '''How often is highest predicted proba class the actual class'''
         if y is None:
             y = self.y
-        if y
         yhat = self.predict(X)
         accuracy = (yhat == y).mean()
         return accuracy
