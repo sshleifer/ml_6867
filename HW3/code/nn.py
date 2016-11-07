@@ -50,11 +50,16 @@ class NN(object):
         self.n_outputs = len(np.unique(y))
         self.z = np.zeros((self.L, n_hidden_nodes))
         self.b = np.zeros((self.L, n_hidden_nodes))
-        self.a = np.zeros((self.L, n_hidden_nodes))
+        self.a = {}
+        np.zeros((self.L, n_hidden_nodes))
 
         self.w = {}
         #self.w[0] = np.ones(*
-        for layer in range(1, self.L):
+        for layer in range(self.L):
+            if layer == 0:
+                self.a[layer] = np.zeros(self.n_inputs)
+                continue
+
             if layer == 1:
                 prev_inputs = n_inputs
             else:
