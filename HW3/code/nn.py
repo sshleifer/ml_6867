@@ -56,6 +56,11 @@ class NN(object):
 
     def revy(self, labels):
         return np.array([self.ymap.get(l) for l in labels])
+    def onehot(self, y):
+        invmap = {v: k for k,v in self.ymap.items()}
+        self.one_hot_y = np.array([[1 if yval ==  else 0 for j in classes] for yval in y])
+        return np.array([invmap.get(l) for l in labels])
+
 
     @staticmethod
     def final_activate(z):
@@ -123,6 +128,7 @@ class NN(object):
         '''How often is highest predicted proba class the actual class'''
         if y is None:
             y = self.y
+        if y
         yhat = self.predict(X)
         accuracy = (yhat == y).mean()
         return accuracy
