@@ -135,7 +135,7 @@ class NN(object):
         if y is None:
             y = self.y
         yhat = np.argmax(self.predict_probas(X), axis=1)
-        #import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         accuracy = (yhat == y).mean()
         return accuracy
 
@@ -169,8 +169,8 @@ class NN(object):
             #updates = self.a[layer - 1].dot(new_delta.T) * lr# should be of shape W
             if np.max(np.abs(updates)) >= 1.:
                 #import ipdb; ipdb.set_trace()
-                # raise ValueError('Updates large: {}'.format(updates))
-                continue
+                raise ValueError('Updates large: {}'.format(updates))
+                #continue
             assert updates.shape == self.w[layer].shape
             assert_no_nans(updates)
             self.w[layer] = self.w[layer] - (updates * lr)
