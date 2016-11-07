@@ -51,7 +51,6 @@ class NN(object):
         self.wo = np.ones((n_hidden_nodes, self.n_outputs))
         self.bo = np.zeros(self.n_outputs)
         self.zo = np.zeros(self.n_outputs)
-
         self.base_loss = self.score(self.X, self.one_hot_y)
 
     def revy(self, labels):
@@ -60,10 +59,8 @@ class NN(object):
     def onehot(self, y):
         return np.array([[1 if yval == j  else 0 for j in self.classes] for yval in y])
 
-
-
     def score_validation(self):
-        return self.accuracy(self.data.Xv, self.data.yv)
+        return self.accuracy(self.data.xv, self.data.yv)
 
 
     @staticmethod
@@ -98,12 +95,14 @@ class NN(object):
     def predict_probas(self, X):
         return np.apply_along_axis(self.feedforward, 1, X)
 
-    def fit(self):
+    def fit(self, validate=False):
         '''stochastically'''
         self.cur_epoch = 0
+        last_score = 0.
         for epoch in range(1, self.epochs):
             self.cur_epoch = epoch
-            learning_rate = get_lr(epoch, k=1.) #max(1. / epoch, 1e-4)
+            #learning_rate = get_lr(epoch, k=1.)
+            learning_rate = max(1. / epoch, 1e-3)
             i = np.random.randint(0, len(self.X))
             x, target = self.X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
@@ -114,7 +113,8 @@ class NN(object):
                 print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
                 if validate:
                     new_score = self.score_validation()
-                    if new_score < last_score:
+                    print new_score
+                    if new_score <= last_score or new_score == 1:
                         break
                     else:
                         last_score = new_score
