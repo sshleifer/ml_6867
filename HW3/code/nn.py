@@ -18,17 +18,13 @@ def stable_softmax(x):
     return e_x / e_x.sum(axis=0)
 
 def assert_no_nans(struct):
+    '''Make sure there are no np.nan floating around in the array/dict'''
     if isinstance(struct, dict):
         ret_val = np.isnan(struct.values()).any()
     else:
         ret_val = np.isnan(struct).any()
     if ret_val:
         raise AssertionError(struct)
-        #import ipdb; ipdb.set_trace()
-
-
-# TODO(SS): better testing
-# TODO(SS): Cross-entropy loss
 
 
 class NN(object):
@@ -110,7 +106,7 @@ class NN(object):
     def fit(self, X, y):
         '''stochastically'''
         for epoch in range(1, self.epochs):
-            learning_rate = 1. / np.sqrt(epoch)
+            learning_rate = 1. / epoch
             i = np.random.randint(0, len(X))
             x, target = X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
@@ -146,33 +142,21 @@ class NN(object):
 
     def backprop(self, error, lr=.1):
         '''Propagate error back through net work and update weights'''
-        # delta[-1] = np.diag(map(dsoftmax, self.zo)).dot(dsigmoid(self.ao) * error)
         self.bo = self.bo - (error * lr)
-        #a_reshape = self.a[self.L - 1].reshape(self.wo.shape[0], 1)
-        #err_reshape = error.reshape(self.wo.shape[1], 1).T
-        updates = self._updates(self.a[self.L - 1], error)
-        # a_reshape.dot(err_reshape)
-        assert updates.shape == self.wo.shape
-        self.wo = self.wo - (updates * lr)
-        #return updates * lr
+        output_weight_updates = self._updates(self.a[self.L - 1], error)
+        assert output_weight_updates.shape == self.wo.shape
+        self.wo = self.wo - (output_weight_updates * lr)
 
         deltas = [error]
         for layer in reversed(range(1, self.L)):
             last_w = self.w.get(layer + 1, self.wo)  # next layer is output if not hidden
             new_delta = np.diag(map(dsoftmax, self.z[layer])).dot(last_w).dot(deltas[-1])
-            #print 'Delta:', new_delta
-            self.b[layer] = self.b[layer] - (new_delta * lr)
-
-            # above is 2 element array
             assert new_delta.shape == (self.n_hidden_nodes,)
-            updates = self._updates(self.a[layer - 1], new_delta) * lr
-            #updates = self.a[layer - 1].dot(new_delta.T) * lr# should be of shape W
-            if np.max(np.abs(updates)) >= 1.:
-                #import ipdb; ipdb.set_trace()
-                raise ValueError('Updates large: {}'.format(updates))
-                #continue
-            assert updates.shape == self.w[layer].shape
-            assert_no_nans(updates)
-            self.w[layer] = self.w[layer] - (updates * lr)
+            self.b[layer] = self.b[layer] - (new_delta * lr)
+            weight_updates = self._updates(self.a[layer - 1], new_delta) * lr
+            assert weight_updates.shape == self.w[layer].shape
+            assert_no_nans(weight_updates)
+            if np.max(np.abs(weight_updates)) >= max(np.max(np.abs(self.w[layer])), 1):
+                raise ValueError('Updates large: {}, danger of explosion'.format(updates))
+            self.w[layer] = self.w[layer] - weight_updates
             deltas.append(new_delta)
-        return deltas
