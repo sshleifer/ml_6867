@@ -1,7 +1,9 @@
 from numpy import *
 import numpy as np
-import pylab as pl
 import pandas as pd
+import pylab as pl
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # X is data matrix (each row is a data point)
 # Y is desired output (1 or -1)
@@ -58,3 +60,12 @@ def mnist_data(digit_true, digit_false):
     ])
     bigx = np.vstack([Xtrue, Xfalse])
     return bigx, bigy
+
+
+def plot_ciupan_df(df):
+    ax = sns.factorplot(x='C', y='Margin', col='Model', data=df, join=True, dodge=True)
+    plt.savefig('figure1.png')
+    ax = sns.factorplot(x='C', y='NumSupportVectors', col='Model', data=df, join=True, dodge=True)
+    plt.savefig('figure2.png')
+    ax = sns.factorplot(x='C', y='NumSupportVectorsAtMargin', col='Model', data=df, join=True, dodge=True)
+    plt.savefig('figure3.png')

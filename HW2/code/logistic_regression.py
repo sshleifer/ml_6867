@@ -40,3 +40,4 @@ class LogReg(object):
     def score(self, X, y):
         yhat = np.sign(self.predict(X))
         return (yhat == y).mean()
+
