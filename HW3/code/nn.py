@@ -158,7 +158,10 @@ class NN(object):
         deltas = [error]
         for layer in reversed(range(1, self.L)):
             last_w = self.w.get(layer + 1, self.wo)  # next layer is output if not hidden
-            new_delta = np.diag(map(dsoftmax, self.z[layer])).dot(last_w).dot(deltas[-1])
+
+            # import ipdb; ipdb.set_trace()
+            new_delta = np.diag(dsoftmax(self.z[layer])).dot(last_w).dot(deltas[-1])
+
             assert new_delta.shape == (self.n_hidden_nodes,)
             self.b[layer] = self.b[layer] - (new_delta * lr)
             weight_updates = np.clip(self._updates(self.a[layer - 1], new_delta) * lr, -1, 1)
