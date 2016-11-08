@@ -111,7 +111,7 @@ class NN(object):
             loss = predicted_probas - target
             self.backprop(loss, lr=learning_rate)
             if epoch % max(1e3, self.epochs / 10) == 0:
-                print 'EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy())
+                print('EPOCH: {}, accuracy = {}'.format(epoch, self.accuracy()))
                 if validate:
                     new_score = self.score_validation()
                     if new_score <= last_score or new_score == 1:
