@@ -8,57 +8,180 @@
 \usepackage{caption}
 \usepackage{pifont}
 \usepackage{listings, courier}
+\usepackage{bbold}
 \graphicspath{{figures}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
+\newcommand{\ds}{\displaystyle}
 \lstset{breaklines=true, basicstyle=\small\ttfamily, language=R, backgroundcolor=\color{highlight}, stepnumber=5}
 
 \definecolor{highlight}{RGB}{248,248,248}
 
 \begin{document}
-	\title{6867 Problem Set 2}
+	\title{6.867 Problem Set 2}
 	\maketitle
 
 \subsubsection*{1. Logistic Regression}
-Linear regression on feature values $X$ to predict discrete variable $Y$ might produce predictions that larger
-than Y's maximum or less than Y's minimum, which prevents a mathematically feasible mapping to predicted probabilities.
-To facilitate this mapping, Logistic Regression transforms Linear Regression's output using the sigmoid function,
-so that it the predictions are bounded on $[0,1]$.
-\begin{equation}
-	\sigma(z) = \frac{1}{1+e^{z}}
-\end{equation}
 
-Using this formulation, we find weights that minimize:
+Assignment description: \emph{Use a gradient descent method to optimize the logistic regression objective, with $\ds L2$ regularization on the weight vector. For L2 regularization, the objective function should be of the form }
 
-\begin{equation}
-	\min_w \sum_i \log \left(1+e^{-y^{(i)}(w_0 + x^{(i)}\cdot w)} \right) + \lambda w^T w
-\end{equation}
+\emph{$$\ds E_{LR}(w, w_0) = NLL(w, w_0) + \lambda \|w\|_2^2$$}
 
-where the left side is negative log likelihood of the model and where $\lambda$is a regularization penalty to prevent overfitting.
+\emph{We had previously defined $$\ds NLL(w, w_0) = \sum_{i=1}^{n} \ln(1+e^{-y^{(i)}(w^Tx^{(i)}) + w_0}) $$}
 
-When we train logistic regression on the 2D datasets, with a decision boundary at .5, we get predictable results
+\textbf{1.1} Assignment description: \emph{Run your code on data1 train.csv with $\ds\lambda = 0.$ What happens to the weight vector as a function of the number of iterations of gradient descent? What happens when $\ds \lambda = 1$? Explain.}
 
-\begin{table}[ht]
-\centering
-\captionof{table}{TODO: Logistic Regression on 2D Datasets}
-\begin{tabular}{lrrrr}
+In order to solve this optimzation problem, we use the gradient descent function developed for the previous pset in order to find optimal weights $\ds w, w_0$. In order to deal with both $\ds L_1$ and $\ds L_2$ errors, as well as the $\ds NLL$ function, we use the numerical gradient in order to compute the gradient at a given vector $\ds (w, w_0)$. This numerical gradient was also developed for the previous pset.
+
+When $\ds \lambda =0$, As we iterate through the gradient descent, the weight vector stabilizes in the first $\ds 50$ iterations to $\ds (w_0 = 6.07, w_1 = -4.3, w_2=38.6)$. When $\ds \lambda=1$, the solution vector fluctuates between two solutions: $\ds (w_0 = 1.35, w_1 = 0.4, w_2=3.44)$ and $\ds (w_0 = 1.35, w_1 = -0.7, w_2=3.28)$. Both of them are acceptable and we see that the norm of both is smaller than the one coming from the unconstrained regression. Decision boundaries for a solution of $\ds \lambda =0$ and $\ds \lambda =1$ are shown below.
+
+\begin{figure}[!ht]
+\includegraphics[scale=0.4]{code/data/Graphs/P1DBL0.png}
+\includegraphics[scale=0.4]{code/data/Graphs/P1DBL1.png}
+\caption{Decision boundaries for lambda =0 (left) and lambda =1 (right)}
+\end{figure}
+
+\textbf{1.2} Assignment description: \emph{Let's now compare the effects of L1 and L2 regularization on LR. Evaluate the effect of the choice of regularizer (L1 vs L2) and the value of $\ds \lambda$ on (a) the weights, (b) the
+decision boundary and (c) the classification error rate in each of the training data sets.}
+
+The tables presented show summaries for each of the four datasets, in order. We observe the usual Ridge and Lasso effects, namely that as the penalty increases, some of the weights in the Lasso model become zero, and that the Ridge weights decrease but do not become zero. Also note that datasets 1, 2, 3 are well estimated by this model, while dataset 4 is not. In these tables we can also comment on the risk of overfitting, if we look at specific parameters with low reaining error but high validation error. However, there are few such cases.
+
+We can observe that the decision boundary, graphically, does not change much with the value of the parameter, except for the Lasso effect where one of the weights becomes one, so the decision boundary passes through the origin.
+
+\begin{center}
+ \begin{tabular}{||c c c c c||} 
+ \hline
+ Regularizer & Lambda & Decision Boundary & Training Error Rate & Validation Error Rate \\ [0.5ex] 
+ \hline\hline
+ L1 & 0.01 & $\ds -0.96 x_1 + 10.33 x_2 +5 =0$ & 0 & 0 \\ 
+ \hline
+ L1 & 0.1 & $\ds -0.60 x_1 +7.23 x_2 +3.35 =0$ & 0 & 0 \\
+ \hline
+ L1 & 1 & $\ds -0.18x_1 +4.36x_2 +0.06 =0$ & 0 & 0. \\
+ \hline
+ L1 & 10 & $\ds 2.43x_2 +0.06 =0$ & 0.01 & 0 \\
+ \hline
+ L2 & 0.01 & $\ds -0.67x_1 + 6.96x_2 +3.38 =0$ & 0 & 0 \\ 
+ \hline
+ L2 & 0.1 & $\ds -0.37x_1 + 4.67x_2 +1.97 =0$ & 0 & 0 \\
+ \hline
+ L2 & 1 & $\ds -0.11 x_1 + 2.89x_2 +0.84=0$ & 0 & 0 \\
+ \hline
+ L2 & 10 & $\ds -0.02x_1 - 1.67 x_2 +0.21 =0$ & 0.025 & 0 \\
+ \hline
 \end{tabular}
-\end{table}
+ \begin{tabular}{||c c c c c||} 
+ \hline
+ Regularizer & Lambda & Decision Boundary & Training Error Rate & Validation Error Rate \\ [0.5ex] 
+ \hline\hline
+ L1 & 0.01 & $\ds 1.82 x_1 + 0.002 x_2 +0.18 =0$ & 0.17 & 0.17 \\ 
+ \hline
+ L1 & 0.1 & $\ds 1.82x_1 +0.001x_2 + 0.18 =0$ & 0.17 & 0.17 \\
+ \hline
+ L1 & 1 & $\ds 1.78x_1 +0.15 =0$ & 0.16 & 0.17 \\
+ \hline
+ L1 & 10 & $\ds 1.52x_2 +0.05 =0$ & 0.18 & 0.18 \\
+ \hline
+ L2 & 0.01 & $\ds 1.81x_1 + 0.002x_2 +0.18 =0$ & 0.17 & 0.175 \\ 
+ \hline
+ L2 & 0.1 & $\ds 1.81x_1 + 0.002x_2 +0.17 =0$ & 0.17 & 0.17 \\
+ \hline
+ L2 & 1 & $\ds 1.71 x_1 + 0.0002x_2 +0.15=0$ & 0.16 & 0.17 \\
+ \hline
+ L2 & 10 & $\ds 1.24x_1 - 0.008 x_2 +0.06 =0$ & 0.17 & 0.18 \\
+ \hline
+\end{tabular}
+ \begin{tabular}{||c c c c c||} 
+ \hline
+ Regularizer & Lambda & Decision Boundary & Training Error Rate & Validation Error Rate \\ [0.5ex] 
+ \hline\hline
+ L1 & 0.01 & $\ds -0.45 x_1 + 13.41 x_2 -6.5 =0$ & 0.01 & 0.03 \\ 
+ \hline
+ L1 & 0.1 & $\ds -0.4x_1 +12x_2 -5.86 =0$ & 0.01 & 0.03 \\
+ \hline
+ L1 & 1 & $\ds -0.18x_1 + 7.67 3.38x_2 - 3.14 =0$ & 0.01 & 0.03 \\
+ \hline
+ L1 & 10 & $\ds 3.38x_2 - 0.44 =0$ & 0.03 & 0.05 \\
+ \hline
+ L2 & 0.01 & $\ds -0.4x_1 + 11.51x_2 -5.40 =0$ & 0.0125 & 0.03 \\ 
+ \hline
+ L2 & 0.1 & $\ds -0.26x_1 + 7.42x_2 -3 =0$ & 0.0175 & 0.035 \\
+ \hline
+ L2 & 1 & $\ds -0.19 x_1 + 4.02x_2 -1=0$ & 0.025 & 0.035 \\
+ \hline
+ L2 & 10 & $\ds -0.11x_1 - 1.95 x_2 -0.22 =0$ & 0.04 & 0.06 \\
+ \hline
+\end{tabular}
+ \begin{tabular}{||c c c c c||} 
+ \hline
+ Regularizer & Lambda & Decision Boundary & Training Error Rate & Validation Error Rate \\ [0.5ex] 
+ \hline\hline
+ L1 & 0.01 & $\ds -0.02 x_1 -0.02x_2  =0$ & 0.48 & 0.50 \\ 
+ \hline
+ L1 & 0.1 & $\ds -0.02x_1 +0.02x_2 =0$ & 0.48 & 0.50 \\
+ \hline
+ L1 & 1 & $\ds -0.02x_1 + 0.02x_2  =0$ & 0.48 & 0.50 \\
+ \hline
+ L1 & 10 & $\ds -0.03x_1 - 0.03x_2 =0$ & 0.48 & 0.51 \\
+ \hline
+ L1 & 0.01 & $\ds -0.02 x_1 -0.02x_2  =0$ & 0.48 & 0.50 \\ 
+ \hline
+ L1 & 0.1 & $\ds -0.02x_1 +0.02x_2 =0$ & 0.48 & 0.50 \\
+ \hline
+ L1 & 1 & $\ds -0.02x_1 + 0.02x_2  =0$ & 0.48 & 0.50 \\
+ \hline
+ L1 & 10 & $\ds -0.02x_1 - 0.02x_2 =0$ & 0.48 & 0.51 \\
+ \hline
+\end{tabular}
+\end{center}
 
-When the classes are linearly separable in dataset 1, the classifier performs very well. In the nonseparable case, it performs no better than a coin flip.
+\textbf{1.3} Assignment description: \emph{Use the training and validation sets to pick the best regularizer and value of $\ds \lambda$ for each data set: data1, data2, data3, data4. Report the performance on the test sets.}
 
-We also explore the effect of adding L1 and L2 regularization  The figures show that for the cases that are not trivial or impossible, 
-the classficattion error on the validation set decreases as we increase $\lambda$ and L1 regularization performs
-slightly better than L2 regularization. In sample, less regularization is associated with less loss since overfitting is fine.
+For datasets $\ds 1, 2, 3$, we find that the L1 regularizer with $\ds \lambda = 0.01$ gives the lowest validation error rate. We also tried $\ds \lambda = 0.02$ and got the same results. Note that for dataset $\ds 4$, al our models do equally bad. Still, by a slight margin, the lowest validation error rate is still with $\ds L1$ and $\ds \lambda = 0.01$.
 
-$/emph{TODO: plot}$
-
-
+The test error rates for each of the four datasets are, in order, $\ds 0, 0.19, 0.05$ and $\ds 0.5$. Note that these are slightly higher than the training and validation errors.
 \subsubsection*{2. Support Vector Machines}
 
-Below. we show the equations for linear SVM with slack variables for an example problem with 
-positive examples (1, 2), (2, 2) and negative examples (0, 0), (-2, 3) for linear SVM with slack variables. 
+\textbf{2.1}
+Assignment description: \emph{Implement the dual form of linear SVMs with slack variables. Please do not use the built-in SVM implementation
+in Matlab or sklearn. Instead, write a program that takes data as input, converts it to the
+appropriate objective function and constraints, and then calls a quadratic programming package to solve
+it. See the file optimizers.txt for installation and usage for matlab/python.}
 
+We write a program that takes the following as inputs
+\begin{enumerate}
+\item $\ds n$ one-dimensional values $\ds Y = (y^{(1)}, y^{(2)}, \dots, y^{(n)})$, where each $\ds y^{(i)} \in \{-1, +1\}$
+\item $\ds n$ $\ds D$ - dimensional vectors $\ds X = (x^{(1)}, x^{(2)}, \dots, x^{(n)})$, where each $\ds x^{(i)} \in\mathbb R^D$
+\item A parameter $\ds C$
+\item A kernel function $\ds K:\mathbb R^D\times \mathbb R^D \mapsto \mathbb R$
+\end{enumerate}
+
+and outputs weights $\ds w\in \mathbb R^D, w_0\in\mathbb R$, with the following properties (standard for SVMs) :
+
+\begin{enumerate}
+\item There exists a function $\ds\phi: \mathbb R^D \mapsto \mathbb R^{\infty}$ and an inner product $\ds \langle, \rangle$ such that $\ds K(x, x') = \langle\phi(x), \phi(x')\rangle$. We write $\ds \mathbb R^{\infty}$ to represent a finite, or infinite-dimensional real vector space.
+\item $\ds w$ can be written as $\ds w = \sum_{i=1}^{n} \alpha_i y^{(i)} \phi(x^{(i)}),$ for $\ds \alpha_1, \alpha_2, \dots \alpha_n \in \mathbb R$, $\ds 0\leq \alpha_i\leq C$ for all $\ds i\in \{1, 2, \dots n\}$
+\item The parameters $\ds \alpha_i$ solve the optimization problem $\ds \min_{\alpha_1, \alpha_2, \dots \alpha_n} \|\frac{1}{2}\sum_{i=1}^{n} \alpha_i y^{(i)} \phi(x^{(i)}) \|^2 - \sum_{i=1}^{n} \alpha_i$ subject to $\ds 0\leq \alpha_i\leq C$ for all $\ds i\in \{1, 2\dots n\}$ and $\ds \sum_{i=1}^{n} \alpha_i y^{(i)} =0$
+\end{enumerate}
+
+In order to solve this optimization problem, we use the cvxopt package in python, which allows us to solve the following problem: $$\ds max_{\alpha}  \frac{1}{2} \alpha^TP\alpha + q^T\alpha \mbox{ such that } G\alpha \leq h, Ax =b.$$
+
+In our problem, solving the C-SVM objective is equivalent to solving the above optimization, with the following input values: 
+\begin{enumerate}
+\item $\ds P = K$, where $\ds K_{(ij)} = y^{(i)}y^{(j)} \langle \phi(x^{(i)}, x^{(j)}\rangle$.
+\item $\ds q$ is a $\ds n\times 1$ vector of $\ds -1$s.
+\item $\ds G$ is a $\ds 2n\times n$ matrix, where the first $\ds n$ rows (and the $\ds n$ columns) represent the matrix $\ds - I_n$, and the next $\ds n$ rows (and the $\ds n$ columns) represent the matrix $\ds I_n$. Note that $\ds I_n$ is the identity matrix in $\ds n$ dimensions.
+\item $\ds h$ is a $\ds 2n\times 1$ vector, where the first $\ds n$ rows are $\ds 0$, and the last $\ds n$ rows are $\ds C$.
+\item $\ds A$ is a $\ds 1\times n$ vector, $\ds A = (y^{(1)}, y^{(2)}, \dots y^{(n)})$.
+\item $\ds b$ is a real number, $\ds b=0$.
+
+\end{enumerate}
+
+Assignment description:\emph{
+Show in your report the constraints and objective that you generate for the 2D problem with positive
+examples (2, 2), (2, 3) and negative examples (0, -1), (-3, -2). Which examples are support vectors?}
+
+In this case we use the regular kernel $\ds K(x,x') = x^Tx'$ (simply the dot product between two $\ds D$-dimensional vectors), our inputs are $\ds x^{(1)} = (2, 2), x^{(2)} = (2, 3), x^{(3)} = (0, -1), x^{(4)} = (-3, -2)$ and $\ds (y^{(1)}, y^{(2)}, y^{(3)}, y^{(4)}) = (+1, +1, -1, -1)$, and the optimization problem is
 
 \[
 \min_{\alpha_1, \alpha_2, \alpha_3, \alpha_4}
@@ -67,10 +190,10 @@ positive examples (1, 2), (2, 2) and negative examples (0, 0), (-2, 3) for linea
     \alpha_1 & \alpha_2 & \alpha_3 & \alpha_4 \\
 \end{bmatrix}
 \begin{bmatrix}
-    5       & 6 & 0 & -4 \\
-    6       & 8 & 0 & -2 \\
-    0       & 0 & 0 & 0 \\
-    -4       & -2 & 0 & 13 \\
+    8       & 10 & 2 & 10 \\
+    10     & 13 & 3 & 12 \\
+    2       & 2  & 1  & 2 \\
+  10       & 12 & 2 & 13 \\
 \end{bmatrix}
 \begin{bmatrix}
     \alpha_1 \\
@@ -91,7 +214,7 @@ positive examples (1, 2), (2, 2) and negative examples (0, 0), (-2, 3) for linea
 \]
 
 \begin{center}
-s.t.
+such that
 \end{center}
 
 \[
@@ -137,90 +260,197 @@ C \\
 = 0
 \]
 
-1. soft SVM, in this case, uses a simple linear kernel, so the decision boundaries that are generated are still straight lines in $\mathbb{R}^2$. However, the slack provided by the soft SVM allows the algorithm to classify data and create a ``margin", even when the data is not linearly separable. As expected, in general the algorithm does slightly better on the training set than the validation set. 
+The optimal values which we find are $\ds (\alpha_1, \alpha_2, \alpha_3, \alpha_4) = (0.153, 0, 0.153, 0)$. The support vectors are $\ds \alpha_1$ and $\ds\alpha_3$.
 
-$/emph{TODO: plot boundaries}$
+\medskip
 
-\iffalse
-\begin{figure}[ht]
-	\centering
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev1_train.png}
-		\caption*{stdev1 (Training)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev2_train.png}
-		\caption*{stdev2 (Training)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev4_train.png}
-		\caption*{stdev4 (Training)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_nonsep_train.png}
-		\caption*{nonsep (Training)}
-	\end{minipage}
-		\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev1_validation.png}
-		\caption*{stdev1 (Validation)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev2_validation.png}
-		\caption*{stdev2 (Validation)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_stdev4_validation.png}
-		\caption*{stdev4 (Validation)}
-	\end{minipage}
-	\begin{minipage}[b]{.24\linewidth}
-		\centering
-		\includegraphics[width=.5\linewidth, height=.5in]{linear_svm_nonsep_validation.png}
-		\caption*{nonsep (Validation)}
-	\end{minipage}
-	\caption{The decision boundaries generated by SVM plotted against the stdev1, stdev2, stdev4, and nonsep (training and validation) datasets}
+\textbf{2.2.} Assignment description: \emph{Test your implementation on the 2D datasets. Set C=1 and report/explain your decision boundary and classification error rate on the training and validation sets.}
+
+The results are below. The decision boundary represents the equation that a 2D point $\ds x=(x_1, x_2)$ satisfies in order that the classifier is indiferent between assigning $\ds +$ or $\ds -$ to that prediction.
+
+\begin{center}
+ \begin{tabular}{||c c c c||} 
+ \hline
+ Dataset ID & Decision Boundary & Training Error Rate & Validation Error Rate \\ [0.5ex] 
+ \hline\hline
+ 1 & $\ds -0.18 x_1 + 1.76 x_2 - 0.67 =0$ & 0.02 & 0.01 \\ 
+ \hline
+ 2 & $\ds 1.31 x_1 -0.04 x_2-0.37=0$ & 0.2 & 0.17 \\
+ \hline
+ 3 & $\ds -0.04 x_1 + 3.43x_2 -0.39 =0$ & 0.03 & 0.05 \\
+ \hline
+ 4 & $\ds -0.21x_1 - 0.21 x_2 - 6.52 =0$ & 0.5 & 0.5 \\
+ \hline
+\end{tabular}
+\end{center}
+
+Notice that out model does poorly on dataset 4 ($\ds data\textunderscore 4\textunderscore test$ and $\ds data\textunderscore 4\textunderscore validate$ ).
+
+\medskip
+\textbf{2.3} Assignment description: \emph{Extend your dual form SVM code to operate
+with kernels. Explore the effects of choosing values of $\ds C\in \{0.01, 0.1, 1, 10, 100\}$ on linear kernels and Gaussian RBF kernels as the bandwidth is also varied.Report your results and answer the following questions:}
+
+(a) Assignment description: \emph{What happens to the geometric margin $\ds \frac{1}{\|w\|}$ as C increases? Will this always happen as we increase C?}
+
+(b) Assignment description: \emph{What happens to the number of support vectors as C increases?}
+
+For each of the four training datasets, we train SVM models with errors $\ds C \in \{0.01, 0.1, 1, 10, 100\}$, for the following four kernels: (linear kernel, Gaussian RBF with $\ds\gamma = 0.01$, Gaussian RBF with $\ds\gamma = 0.1$, Gaussian RBF with $\ds\gamma = 1$). We plot the margin and the number of support vectors for each of these models.
+\begin{figure}[!ht]
+\includegraphics[scale=0.075]{code/data/Graphs/D1Margin.png}
+\includegraphics[scale=0.075]{code/data/Graphs/D1NumSV.png}
+\caption{Margin and number of support vectors for Dataset 1}
+\includegraphics[scale=0.075]{code/data/Graphs/D2Margin.png}
+\includegraphics[scale=0.075]{code/data/Graphs/D2NumSV.png}
+\caption{Margin and number of support vectors for Dataset 2}
+\includegraphics[scale=0.075]{code/data/Graphs/D3Margin.png}
+\includegraphics[scale=0.075]{code/data/Graphs/D3NumSV.png}
+\caption{Margin and number of support vectors for Dataset 3}
+\includegraphics[scale=0.075]{code/data/Graphs/D4Margin.png}
+\includegraphics[scale=0.075]{code/data/Graphs/D4NumSV.png}
+\caption{Margin and number of support vectors for Dataset 4}
 \end{figure}
-\fi
 
-However, note that as the data becomes less and less linearly separable, our soft SVM with a linear kernel does increasingly poorly. This motivates our decision to explore the use of a Gaussian (or RBF) kernel. Table 4 includes the performance of our soft SVM algorithm on various training sets when we change kernels (for both linear and Gaussian kernels), and also when we modify the bandwidth of our Gaussian kernel (where applicable) and change our regularization parameter, $C$. 
+Notice that the number of support vector drops as a function of $\ds C$, and then does not change between $\ds C=10$ and $\ds C=100$. Also notice that the margin decreases as a function of $\ds C$. This makes sense- we penalize slack variables more as we increase $\ds C$. The number of support vectors is small for the linear kernel function, and large for the Gaussian RBF. Finally, the linear kernel predictor has the lowest margin, but in the validation test the Gaussian RBF functions have a lower error rate.
 
-Geometric margin tends to increase as the parameter $C$ decreases, and the larger the geometric margin, the more support vectors.
-The more slack we allow, the more data points we will observe on or inside of our margin. 
-As $C$ goes to 0, the descision boundary will approach the hard SVM decision boundary, and the geometric margin will stop increasing.
+(c) Assignment description: \emph{The value of C will typically change the resulting classifier and therefore also affects the accuracy
+on test examples. Why would maximizing the geometric margin $\ds \frac{1}{\|w\|}$ on the training set not be
+an appropriate criterion for selecting C? Is there an alternative criterion that we could use for this
+purpose?}
 
-Choosing $C$ by maximizing the geometric margin encourages tiny values of $C$, which are likely to overfit the training data.
-A better procedure would select the value of $C$ that minimizes classification error on the validation set.
-
-
-
-\begin{table}
-\centering
-\captionof{table}{Classification Performance for Different SVM Parameters and Kernels}
-\begin{tabular}{c c|c|c|c|c|c}
-\end{tabular}
-\end{table}
-
-\begin{table}
-\captionof{table}{Soft SVM Performance for Different Parameters and Kernels} 
-\centering
-\begin{tabular}{llllll}
-\end{tabular}
-\end{table}
+Maximizing the geometric margin on the training set could lead to overfitting, and this objective is not speficially designed in order to optimize classification error on unseen data. Moreover, we saw in part $\ds b)$ that the margin does not change when $\ds C$ is set high enough.
+If we care about the accuracy of our classifier on unseen data, then we should choose the parameter $\ds C$ which delivers the lowest error metric (for example, classification error) on a validation set.
 
 \subsubsection*{3. Pegasos SVM}
+\textbf{3.1}
+Assignment description: \emph{Implement the Pegasos algorithm for the linear kernel, adding a formula for the bias term $\ds w_0$ as well) , but take care not to penalize the magnitude of $\ds w_0$. Your function should output classifier
+weights for a linear decision boundary.}
+
+We implement the algorithm Pegasos 1, described below.
+
+\begin{algorithm}
+\caption{Pegasos 1}
+\begin{algorithmic}[1]
+\Procedure{Pegasos 1}{}
+\State Specify inputs $\ds (x^{(i)}, y^{(i)}) $, parameter $\ds\lambda$, $\ds ME$ (max epochs)
+\State Infer $\ds n$ = number of observations
+\State Set $\ds t=0$, $\ds w^{0}=0$, $\ds b_0 = 0$, $\ds n_k = \frac{1}{k\lambda}$ for $\ds 1\leq k \leq ME$.
+\While{$\ds t < ME$}
+\For{i = 1, 2, \dots n}
+\If{$\ds y^{(i)}(w_t^T\cdot x^{(i)} + b_t) <1$}
+\State $\ds w_{t+1}:= (1-n_t\lambda)w_t + n_ty^{(i)}x^{(i)}$
+\State $\ds b_{t+1}:= b_t + n_ty^{(i)}$
+\Else
+\State $\ds w_{t+1} = (1-n_t\lambda)w_t$
+\State $\ds b_{t+1} = b_t$
+\EndIf{}
+\State $\ds t:=t+1$
+\EndFor{}
+\EndWhile{}
+Output $\ds w_t, b_t$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Note that $\ds w_t$ is our vector of weights $\ds w$, and $\ds b_t$ is the bias $\ds w_0$.
+
+Given a new input $\ds x$, we make the prediction $\ds sgn(w^T\cdot x + b)$ to determine the predicted group (positive or negative) that the datapoint belongs to.
+
+\medskip
+
+\textbf{3.2} Assignment description: \emph{Test various values of the regularization constant, $\ds \lambda \in\{2, 1, 2^{-1}, \dots 2^{-10}\}$
+Observe the the margin as a function of $\ds\lambda$. Does this match your understanding
+of the objective function?}
+
+We train our model on the first training dataset. The figure below shows margin as a function of $\ds \lambda$, on a log scale. We can see that this function is roughly linear. In particular, it is increasing in $\ds \lambda$, which makes sense - as we increase the penalty $\ds \lambda$, we force $\ds \frac{1}{\|w\|^2}$ to be small, which forces the margin to increase. Also, increasing $\ds \lambda$ is equivalent to decreasing the $\ds C$ parameter in SVM-C, which is equivalent to penalizing slack variables less, which gives a larger margin as well.
+
+
+\begin{figure}[!ht]
+\includegraphics[scale=0.1]{code/data/Graphs/MarginVsLambda.png}
+\caption{Margin as a function of the lambda parameter}
+\end{figure}
+
+\medskip
+
+\textbf{3.3} Assignment description: \emph{Implement a kernelized version of the Pegasos algorithm. It should take in a Gram matrix, where entry $\ds (i, j)$ is $\ds K(x^{(i)}, x^{(j)}) = \langle\phi(x^{(i)}, \phi(x^{(j)})\rangle$ and should should output the support vector values, α, or a function
+that makes a prediction for a new input. In this version, you do not need to add a bias term. The kernelized version of the Pegasos algorithm is $$\ds min_{w} \frac{\lambda}{2}\|w\|^2 + \frac{1}{n}\sum_{i=1}^n\max\{0, 1-y^{(i)}w^T\phi(x^{(i)})\}$$
+Given this formulation, how should you make a prediction for a new input x? Does it have the same
+sparsity properties as the dual SVM solution?}
+
+We implement the algorithm Pegasos 2, described below:
+
+\begin{algorithm}
+\caption{Pegasos 2}
+\begin{algorithmic}[1]
+\Procedure{Pegasos 2}{}
+\State Specify inputs $\ds (x^{(i)}, y^{(i)}) $, parameter $\ds\lambda$, $\ds ME$ (max epochs), K (Kernel function)
+\State Infer $\ds n$ = number of observations
+\State Set $\ds t=0$, $\ds \alpha_i=0$ for $\ds 1\leq i\leq n $, $\ds n_k = \frac{1}{k\lambda}$ for $\ds 1\leq k \leq ME$.
+\While{$\ds t < ME$}
+\For{i = 1, 2, \dots n}
+\If{$\ds y^{(i)}\left(\sum_{j=1}^n \alpha_j K(x^{(j)}, x^{(i)})\right) <1$}
+\State $\ds \alpha_i:= (1-n_t\lambda)\alpha_i + n_ty^{(i)}$
+\Else
+\State $\ds \alpha_i := (1-n_t\lambda)\alpha_i$
+\EndIf{}
+\State $\ds t:=t+1$
+\EndFor{}
+\EndWhile{}
+Output $\ds (\alpha_1, \alpha_2, \dots, \alpha_n)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Given this formulation, the prediction function for a new input $\ds x$ is $\ds f(x) = sgn\left(\sum_{i=1}^n \alpha_iK(x, x^{(i)})\right).$
+
+Does this have the same sparsity properties as the dual SVM solution? Well, this depends on whether the $\ds\alpha$ values will be predominantly zero. But note that nowhere in our code do we specifically restrict that $\ds \alpha_i$ is greater than zero, and we do indeed see many nonzero (and negative) alphas in our solution.
+
+\medskip
+
+\textbf{3.4} Assignment description: \emph{Classify the same data using a Gaussian kernel and test various values of the $\ds \gamma \in \{4, 2, 1, 0.5, 0.25\}$. Use a fixed $\ds \lambda = .02$.}
+How does the decision boundary and the number of support vectors change depending on $\ds\gamma$? How do
+your results compare to those obtained with the SVM in the previous section?
+
+As $\ds \gamma$ increases in the set $\ds \{4, 2, 1, 0.5, 0.25\}$, the number of support vectors increases to $\ds \{53, 54, 62, 86, 121\}$. This makes sense, since a smaller $\ds\gamma$ implies more model sensitivity. The decision boundary also becomes more curved towards our sample points, as we increase $\ds\gamma$.
+
+Below is the decision boundary for dataset 4, with $\ds\gamma = 0.25$ :
+
+\begin{figure}[!ht]
+\includegraphics[scale=0.4]{code/data/Graphs/D44.png}
+\includegraphics[scale=0.4]{code/data/Graphs/D4025.png}
+\caption{Decision boundary for gamma =4 (left) and gamma =0.25(right)}
+\end{figure}
 
 \subsubsection*{4.MNIST Classification}
 
-\begin{table}[ht]
-\centering
-\captionof{table}{MNIST Classification Performance}
-\begin{tabular}{lrrrr}
+\textbf{4.1} We take a look at the classification of $\ds 1$ vs $\ds 7$ and compare the Lasso penalty model from problem 1 to the linear SVM model from problem 2. We try out values of $\ds \lambda \in \{0.01, 0.04, 0.16\}$ and values of $\ds C \in \{0.4, 1, 2.5\}$. Results are in the table below.
+\begin{center}
+ \begin{tabular}{||c c c c||} 
+ \hline
+ Model Type & Training Error Rate & Validation Error Rate & Test Error Rate \\ [0.5ex] 
+ \hline\hline
+ Logistic regression, lasso penalty 0.01 & 0 & 0.013 & 0.013 \\ 
+ \hline
+ Logistic regression, lasso penalty 0.04 & 0 & 0.01 & 0.013 \\
+ \hline
+ Logistic regression, lasso penalty 0.16 & 0 & 0.01 & 0.0016 \\
+ \hline
+ C-SVM, C=0.4 & 0 & 0.02 & 0.05 \\
+\hline
+C-SVM, C=1 & 0 & 0.02 & 0.05 \\
+\hline
+C-SVM, C=2.5 & 0 & 0.05 & 0.05 \\
+ \hline
 \end{tabular}
-\end{table}
+\end{center}
+
+We observe that the Lasso model does better than our $\ds C$ -SVM, which is surprising. We also note that re-scaling our X inputs leads to very similar results.
+
+\textbf{4.2} We run the gaussian RBF kernel classification with $\ds \gamma \in \{0.01, 0.02, 0.04\}$ and we observe that while fitting the test data perfectly, this model does very poorly on the validation and test sets - this is an indication of a potential issue with our optimization function, despite showing very sensible results for problems 2 and 3. See for example the decision boundary above. We were expecting the data to be fit more tightly by the RBF, since that is what we saw in the 2 dimensional case.
+
+Normalization of data should matter, based on a normalization test we did on a 2-dimensional set, although this is unintuitive at first. It could be an indicator of the variance in this estimator (very unlikely), or of a potential issue with the optimization code, which makes it prone to changes in the inputs.
+
+\textbf{4.3} The accuracies between the quadratic programming aproach and the pegasos aproach are similar, although pegasus has one major drawback- in its current form, described in class, it does not have a bias term. This will mean in practice that the decision boundaries between the quadratic solution and the pegasos solution will be shifted from each other (by exactly the bias term) - and indeed this is what we saw in the two-dimensional case.
+
+The pegasos algorithm presents an inprovement over the quadratic solution, in runtime. As we run both the quadratic algorithm and the pegasos algorithm on datasets of size (200, 400, 600, 800, 1000), we observe that the pegasus algorithm finds the weights in time approximately (approximately $size^{1.1}$), whereas pegasos solves it in polynomial time (approximately $\ds size^{2.3}$)
+
 \end{document}
