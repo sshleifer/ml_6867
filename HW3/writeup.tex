@@ -1,13 +1,22 @@
+%% LyX 2.2.2 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
 \documentclass[10pt]{article}
-\usepackage[margin=1in]{geometry} 
-\usepackage{enumerate, xfrac, color, graphicx}
-\usepackage{algpseudocode}
+\usepackage{courier}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{enumerate}
+\usepackage{xfrac}\usepackage{color}\usepackage{graphicx}\usepackage{algpseudocode}
 \usepackage{algorithm}
-\usepackage{amsmath,amsthm,amssymb,amsfonts}
-\usepackage{booktabs}
+\usepackage{amsthm}\usepackage{amsfonts}\usepackage{booktabs}
 \usepackage{caption}
 \usepackage{pifont}
-\usepackage{listings, courier}
+\usepackage{listings}
 \graphicspath{{figures}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -15,12 +24,57 @@
 
 \definecolor{highlight}{RGB}{248,248,248}
 
-\begin{document}
-	\title{6867 Problem Set 3}
-	\maketitle
 
-    \subsubsection*{1. NN Implementation}
-     SoftMax output layer guarantees that we output probabilities that sum to 1.
-     Cross-entropy loss allows the derivative of loss w.r.t weights to be nicely defined [GUESS]
-     Random weights with variance > .5 tend to produce divergence
+
+\makeatother
+
+\begin{document}
+
+\title{6867 Problem Set 3}
+\maketitle
+
+\subsubsection*{1. NN Implementation}
+
+SoftMax output layer guarantees that we output probabilities that
+sum to 1. Cross-entropy loss allows the derivative of loss w.r.t weights
+to be nicely defined {[}GUESS{]} Random weights with variance \textgreater{}
+.5 tend to produce divergence
+
+\subsubsection*{2. Convolutional Neural Nets}
+
+In this section, we test the performance of different convolutional
+architectures on the task of identifying which artist painted an image.
+Our initial architecture is a four layer net, with two convolutional
+layers followed by a normal hidden layer followed by the output layer.
+Each hidden layer has 64 nodes, and uses relu \$\textbackslash{}max(x,
+0)\$ as an activation function. The output layer maps the final hidden
+layer to probailities using softmax, with loss measured by avg. cross
+entropy accross the predicted probabilities, and optimization with
+gradient descent. The dataset includes 451 RGB images (downsampled
+to 50x50) from 11 different artists. The intial architecture scores
+\textasciitilde{}100\% on training data and roughly 67\% on validation
+data, suggesting overfitting.
+
+\textbf{Receptive Field: }The convolutional filters are of size 5
+so the average neuron in layer 2 ``sees'' 5x5 =25 pixels (at depth
+3), if we follow that with a 3x3 filter, it will see 9 x 25 =225 pixels
+(before multiplying by 3 for RGB \textbf{GUESS}
+
+depth of output -\textgreater{} num filters
+
+{*}{*}Accuracy Table{*}{*}
+
+In this case, the input pixels only contribute information to the
+fully connected layers through the convolutional filters. So it is
+the neurons in the final feature map produced by the convolutional
+layers that are fully connected to neurons in the next hidden layer. 
+
+Receptive Field: if we have a 50x50 image followed by a 
+
+1. Receptive Field
+
+2. 
+
+layer 1 shape {[}10, 7, 7, 16{]} layer 1 shape {[}87, 7, 7, 16{]}
+layer 1 shape {[}87, 7, 7, 16{]}
 \end{document}
