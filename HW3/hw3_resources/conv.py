@@ -5,7 +5,7 @@ import sys
 import math
 import time
 
-DATA_PATH = 'art_data/'
+DATA_PATH = 'hw3_resources/art_data/'
 DATA_FILE = DATA_PATH + 'art_data.pickle'
 IMAGE_SIZE = 50
 NUM_CHANNELS = 3
@@ -13,10 +13,15 @@ NUM_LABELS = 11
 INCLUDE_TEST_SET = False
 
 class ArtistConvNet:
-    def __init__(self, invariance=False):
+    def __init__(self, invariance=False, dropout_prob=1., weight_penalty=0., pooling=True,
+                num_training_steps=1501):
         '''Initialize the class by loading the required datasets
         and building the graph'''
+        self.num_training_steps = num_training_steps
         self.load_pickled_dataset(DATA_FILE)
+        self.dropout_prob = dropout_prob
+        self.weight_penalty = weight_penalty
+        self.pooling = pooling
         self.invariance = invariance
         if invariance:
             self.load_invariance_datasets()
@@ -37,18 +42,17 @@ class ArtistConvNet:
         layer2_stride = 2
         layer3_num_hidden = 64
         layer4_num_hidden = 64
-        num_training_steps = 1501
 
         # Add max pooling
-        pooling = False
+        pooling = self.pooling
         layer1_pool_filter_size = 2
-        layer1_pool_stride = 2
+        layer1_pool_stride = 1
         layer2_pool_filter_size = 2
         layer2_pool_stride = 2
 
         # Enable dropout and weight decay normalization
-        dropout_prob = 1.0 # set to < 1.0 to apply dropout, 1.0 to remove
-        weight_penalty = 0.0 # set to > 0.0 to apply weight penalty, 0.0 to remove
+        dropout_prob = self.dropout_prob # set to < 1.0 to apply dropout, 1.0 to remove
+        weight_penalty = self.weight_penalty # set to > 0.0 to apply weight penalty, 0.0 to remove
 
         with self.graph.as_default():
             # Input data
@@ -125,14 +129,15 @@ class ArtistConvNet:
             loss = loss + weight_decay_penalty([layer3_weights, layer4_weights], weight_penalty)
 
             # Optimizer
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+            # optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
             # Predictions for the training, validation, and test data.
             train_prediction = tf.nn.softmax(logits)
             valid_prediction = tf.nn.softmax(network_model(tf_valid_dataset))
             test_prediction = tf.nn.softmax(network_model(tf_test_dataset))
 
-            def train_model(num_steps=num_training_steps):
+            def train_model(num_steps=self.num_training_steps):
                 '''Train the model with minibatches in a tensorflow session'''
                 with tf.Session(graph=self.graph) as session:
                     tf.initialize_all_variables().run()
@@ -154,7 +159,7 @@ class ArtistConvNet:
                             print('Batch loss at step %d: %f' % (step, l))
                             print('Batch training accuracy: %.1f%%' % accuracy(predictions, batch_labels))
                             print('Validation accuracy: %.1f%%' % accuracy(val_preds, self.val_Y))
-
+                            val_accuracy = accuracy(val_preds, self.val_Y)
                     # This code is for the final question
                     if self.invariance:
                         print "\n Obtaining final results on invariance sets!"
@@ -172,7 +177,7 @@ class ArtistConvNet:
                             # save final preds to make confusion matrix
                             if i == 0:
                                 self.final_val_preds = preds
-
+                return val_accuracy
             # save train model function so it can be called later
             self.train_model = train_model
 

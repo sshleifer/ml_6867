@@ -63,10 +63,9 @@ class NN(object):
     def score_validation(self):
         return self.accuracy(self.data.xv, self.data.yv)
 
-
     @staticmethod
     def final_activate(z):
-        return stable_softmax(z) #jlksjnp.exp(z) / np.sum(np.exp(z))
+        return stable_softmax(z)
 
     def feedforward(self, x):
         '''pass one x row through the network'''
@@ -103,7 +102,7 @@ class NN(object):
         for epoch in range(1, self.epochs):
             self.cur_epoch = epoch
             #learning_rate = get_lr(epoch, k=1.)
-            learning_rate = max(1. / epoch, 1. / len(self.X))
+            learning_rate = max(1. / epoch, 1e-3)
             i = np.random.randint(0, len(self.X))
             x, target = self.X[i], self.one_hot_y[i]
             predicted_probas = self.feedforward(x)
