@@ -12,7 +12,8 @@ IMAGE_SIZE = 50
 NUM_CHANNELS = 3
 NUM_LABELS = 11
 INCLUDE_TEST_SET = False
-VERBOSE = False
+VERBOSE = True
+LOG = []
 
 
 def mprint(*args, **kwargs):
@@ -44,15 +45,16 @@ class ArtistConvNet:
         if invariance:
             self.load_invariance_datasets()
         self.graph = tf.Graph()
-
         with self.graph.as_default():
             # Input data
-            tf_train_dataset = tf.placeholder(
+            tf_train_batch = tf.placeholder(
                 tf.float32, shape=(batch_size, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
             tf_train_labels = tf.placeholder(tf.float32, shape=(batch_size, NUM_LABELS))
             tf_valid_dataset = tf.constant(self.val_X)
             tf_test_dataset = tf.placeholder(
                 tf.float32, shape=[len(self.val_X), IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS])
+            tf_train_dataset = tf.placeholder(
+                tf.float32, shape=[len(self.train_X), IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS])
 
             # Implement dropout
             dropout_keep_prob = tf.placeholder(tf.float32)
@@ -62,7 +64,6 @@ class ArtistConvNet:
                 [layer1_filter_size, layer1_filter_size, NUM_CHANNELS, layer1_depth], stddev=0.1))
             layer1_biases = tf.Variable(tf.zeros([layer1_depth]))
             layer1_feat_map_size = int(math.ceil(float(IMAGE_SIZE) / layer1_stride))
-
             if pooling:
                 layer1_feat_map_size = int(math.ceil(float(layer1_feat_map_size) / layer1_pool_stride))
 
@@ -78,7 +79,7 @@ class ArtistConvNet:
             layer3_biases = tf.Variable(tf.constant(1.0, shape=[layer3_num_hidden]))
 
             layer4_weights = tf.Variable(tf.truncated_normal(
-              [layer4_num_hidden, NUM_LABELS], stddev=0.1))
+              [layer3_num_hidden, NUM_LABELS], stddev=0.1))
             layer4_biases = tf.Variable(tf.constant(1.0, shape=[NUM_LABELS]))
 
             # Model
@@ -88,13 +89,11 @@ class ArtistConvNet:
                 # Layer 1
                 conv1 = tf.nn.conv2d(data, layer1_weights, [1, layer1_stride, layer1_stride, 1], padding='SAME')
                 hidden = tf.nn.relu(conv1 + layer1_biases)
-                shape = hidden.get_shape().as_list()
-                mprint("layer 1 shape", shape)
 
                 if pooling:
                     hidden = tf.nn.max_pool(hidden, ksize=[1, layer1_pool_filter_size, layer1_pool_filter_size, 1],
-                                            strides=[1, layer1_pool_stride, layer1_pool_stride, 1],
-                                            padding='SAME', name='pool1')
+                                       strides=[1, layer1_pool_stride, layer1_pool_stride, 1],
+                                        padding='SAME', name='pool1')
 
                 # Layer 2
                 conv2 = tf.nn.conv2d(hidden, layer2_weights, [1, layer2_stride, layer2_stride, 1], padding='SAME')
@@ -102,12 +101,11 @@ class ArtistConvNet:
 
                 if pooling:
                     hidden = tf.nn.max_pool(hidden, ksize=[1, layer2_pool_filter_size, layer2_pool_filter_size, 1],
-                                            strides=[1, layer2_pool_stride, layer2_pool_stride, 1],
-                                            padding='SAME', name='pool2')
+                                       strides=[1, layer2_pool_stride, layer2_pool_stride, 1],
+                                        padding='SAME', name='pool2')
 
                 # Layer 3
                 shape = hidden.get_shape().as_list()
-                mprint("layer 2 shape", shape)
                 reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2] * shape[3]])
                 hidden = tf.nn.relu(tf.matmul(reshape, layer3_weights) + layer3_biases)
                 hidden = tf.nn.dropout(hidden, dropout_keep_prob)
@@ -117,7 +115,7 @@ class ArtistConvNet:
                 return output
 
             # Training computation
-            logits = network_model(tf_train_dataset)
+            logits = network_model(tf_train_batch)
             loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
 
             # Add weight decay penalty
@@ -128,9 +126,11 @@ class ArtistConvNet:
 
             optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
             # Predictions for the training, validation, and test data.
-            train_prediction = tf.nn.softmax(logits)
+            batch_prediction = tf.nn.softmax(logits)
+
             valid_prediction = tf.nn.softmax(network_model(tf_valid_dataset))
             test_prediction = tf.nn.softmax(network_model(tf_test_dataset))
+            train_prediction = tf.nn.softmax(network_model(tf_train_dataset))
 
             def train_model(num_steps=num_training_steps):
                 '''Train the model with minibatches in a tensorflow session'''
@@ -144,16 +144,20 @@ class ArtistConvNet:
                         batch_labels = self.train_Y[offset:(offset + batch_size), :]
 
                         # Data to feed into the placeholder variables in the tensorflow graph
-                        feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels,
+                        feed_dict = {tf_train_batch: batch_data, tf_train_labels : batch_labels,
                                      dropout_keep_prob: dropout_prob}
                         _, l, predictions = session.run(
-                          [optimizer, loss, train_prediction], feed_dict=feed_dict)
-                        if (step % 100 == 0):
+                          [optimizer, loss, batch_prediction], feed_dict=feed_dict)
+                        if (step % 200 == 0):
+                            # train_preds = session.run(full_train_prediction, feed_dict={dropout_keep_prob : 1.0})
+                            train_preds = session.run(train_prediction, feed_dict={tf_train_dataset: self.train_X,
+                                                                           dropout_keep_prob : 1.0})
                             val_preds = session.run(valid_prediction, feed_dict={dropout_keep_prob : 1.0})
                             mprint('Batch loss at step %d: %f' % (step, l))
                             mprint('Batch training accuracy: %.1f%%' % accuracy(predictions, batch_labels))
                             mprint('Validation accuracy: %.1f%%' % accuracy(val_preds, self.val_Y))
-                            val_accuracy = accuracy(val_preds, self.val_Y)
+                            mprint('Full train accuracy: %.1f%%' % accuracy(train_preds, self.train_Y))
+
                     # This code is for the final question
                     if self.invariance:
                         mprint("\n Obtaining final results on invariance sets!")
@@ -174,6 +178,7 @@ class ArtistConvNet:
                 return val_accuracy
             # save train model function so it can be called later
             self.train_model = train_model
+            self.log = LOG
 
     def load_pickled_dataset(self, pickle_file):
         mprint ("Loading datasets...")
@@ -207,10 +212,8 @@ class ArtistConvNet:
 def weight_decay_penalty(weights, penalty):
     return penalty * sum([tf.nn.l2_loss(w) for w in weights])
 
-
 def accuracy(predictions, labels):
-  return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-          / predictions.shape[0])
+    return 100*np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0]
 
 
 if __name__ == '__main__':
