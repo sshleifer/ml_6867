@@ -15,6 +15,10 @@ INCLUDE_TEST_SET = False
 
 class ArtistConvNet:
     def __init__(self, invariance=False, dropout_prob=1., weight_penalty=0., pooling=False,
+                 layer_1_pool_fiter_size=2,
+                 layer_1_pool_stride=1,
+                 layer_2_pool_fiter_size=2,
+                 layer_2_pool_stride=2,
                 num_training_steps=1501):
         '''Initialize the class by loading the required datasets
         and building the graph'''
@@ -24,6 +28,10 @@ class ArtistConvNet:
         self.weight_penalty = weight_penalty
         self.pooling = pooling
         self.invariance = invariance
+        self.layer_1_pool_fiter_size = layer_1_pool_fiter_size
+        self.layer_2_pool_stride = layer_1_pool_stride
+        self.layer_2_pool_fiter_size = layer_2_pool_fiter_size
+        self.layer_2_pool_stride = layer_2_pool_stride
         if invariance:
             self.load_invariance_datasets()
         self.graph = tf.Graph()
