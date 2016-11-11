@@ -12,56 +12,38 @@ IMAGE_SIZE = 50
 NUM_CHANNELS = 3
 NUM_LABELS = 11
 INCLUDE_TEST_SET = False
+VERBOSE = False
+
+
+def mprint(*args, **kwargs):
+    if VERBOSE:
+        print(*args, **kwargs)
+
 
 class ArtistConvNet:
     def __init__(self, invariance=False, dropout_prob=1., weight_penalty=0., pooling=False,
-                 layer_1_pool_fiter_size=2,
-                 layer_1_pool_stride=1,
-                 layer_2_pool_fiter_size=2,
-                 layer_2_pool_stride=2,
-                num_training_steps=1501):
+                 layer1_pool_filter_size=2,
+                 layer1_pool_stride=1,
+                 layer2_pool_filter_size=2,
+                 layer2_pool_stride=2,
+                 num_training_steps=1501,
+                 batch_size=10,
+                 learning_rate=0.01,
+                 layer1_filter_size=5,
+                 layer1_depth=16,
+                 layer1_stride=2,
+                 layer2_filter_size=5,
+                 layer2_depth=16,
+                 layer2_stride=2,
+                 layer3_num_hidden=64,
+                 layer4_num_hidden=64):
         '''Initialize the class by loading the required datasets
         and building the graph'''
-        self.num_training_steps = num_training_steps
         self.load_pickled_dataset(DATA_FILE)
-        self.dropout_prob = dropout_prob
-        self.weight_penalty = weight_penalty
-        self.pooling = pooling
         self.invariance = invariance
-        self.layer_1_pool_fiter_size = layer_1_pool_fiter_size
-        self.layer_2_pool_stride = layer_1_pool_stride
-        self.layer_2_pool_fiter_size = layer_2_pool_fiter_size
-        self.layer_2_pool_stride = layer_2_pool_stride
         if invariance:
             self.load_invariance_datasets()
         self.graph = tf.Graph()
-        self.define_tensorflow_graph()
-
-    def define_tensorflow_graph(self):
-        print('\nDefining model...')
-
-        # Hyperparameters
-        batch_size = 10
-        learning_rate = 0.01
-        layer1_filter_size = 5
-        layer1_depth = 16
-        layer1_stride = 2
-        layer2_filter_size = 5
-        layer2_depth = 16
-        layer2_stride = 2
-        layer3_num_hidden = 64
-        layer4_num_hidden = 64
-
-        # Add max pooling
-        pooling = self.pooling
-        layer1_pool_filter_size = 2
-        layer1_pool_stride = 1
-        layer2_pool_filter_size = 2
-        layer2_pool_stride = 2
-
-        # Enable dropout and weight decay normalization
-        dropout_prob = self.dropout_prob  # set to < 1.0 to apply dropout, 1.0 to remove
-        weight_penalty = self.weight_penalty  # set to > 0.0 to apply weight penalty, 0.0 to remove
 
         with self.graph.as_default():
             # Input data
@@ -80,6 +62,7 @@ class ArtistConvNet:
                 [layer1_filter_size, layer1_filter_size, NUM_CHANNELS, layer1_depth], stddev=0.1))
             layer1_biases = tf.Variable(tf.zeros([layer1_depth]))
             layer1_feat_map_size = int(math.ceil(float(IMAGE_SIZE) / layer1_stride))
+
             if pooling:
                 layer1_feat_map_size = int(math.ceil(float(layer1_feat_map_size) / layer1_pool_stride))
 
@@ -106,7 +89,7 @@ class ArtistConvNet:
                 conv1 = tf.nn.conv2d(data, layer1_weights, [1, layer1_stride, layer1_stride, 1], padding='SAME')
                 hidden = tf.nn.relu(conv1 + layer1_biases)
                 shape = hidden.get_shape().as_list()
-                print("layer 1 shape", shape)
+                mprint("layer 1 shape", shape)
 
                 if pooling:
                     hidden = tf.nn.max_pool(hidden, ksize=[1, layer1_pool_filter_size, layer1_pool_filter_size, 1],
@@ -124,7 +107,7 @@ class ArtistConvNet:
 
                 # Layer 3
                 shape = hidden.get_shape().as_list()
-                print("layer 2 shape", shape)
+                mprint("layer 2 shape", shape)
                 reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2] * shape[3]])
                 hidden = tf.nn.relu(tf.matmul(reshape, layer3_weights) + layer3_biases)
                 hidden = tf.nn.dropout(hidden, dropout_keep_prob)
@@ -149,11 +132,11 @@ class ArtistConvNet:
             valid_prediction = tf.nn.softmax(network_model(tf_valid_dataset))
             test_prediction = tf.nn.softmax(network_model(tf_test_dataset))
 
-            def train_model(num_steps=self.num_training_steps):
+            def train_model(num_steps=num_training_steps):
                 '''Train the model with minibatches in a tensorflow session'''
                 with tf.Session(graph=self.graph) as session:
                     tf.initialize_all_variables().run()
-                    print('Initializing variables...')
+                    mprint('Initializing variables...')
 
                     for step in range(num_steps):
                         offset = (step * batch_size) % (self.train_Y.shape[0] - batch_size)
@@ -167,13 +150,13 @@ class ArtistConvNet:
                           [optimizer, loss, train_prediction], feed_dict=feed_dict)
                         if (step % 100 == 0):
                             val_preds = session.run(valid_prediction, feed_dict={dropout_keep_prob : 1.0})
-                            print('Batch loss at step %d: %f' % (step, l))
-                            print('Batch training accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-                            print('Validation accuracy: %.1f%%' % accuracy(val_preds, self.val_Y))
+                            mprint('Batch loss at step %d: %f' % (step, l))
+                            mprint('Batch training accuracy: %.1f%%' % accuracy(predictions, batch_labels))
+                            mprint('Validation accuracy: %.1f%%' % accuracy(val_preds, self.val_Y))
                             val_accuracy = accuracy(val_preds, self.val_Y)
                     # This code is for the final question
                     if self.invariance:
-                        print("\n Obtaining final results on invariance sets!")
+                        mprint("\n Obtaining final results on invariance sets!")
                         sets = [self.val_X, self.translated_val_X, self.bright_val_X, self.dark_val_X,
                                 self.high_contrast_val_X, self.low_contrast_val_X, self.flipped_val_X,
                                 self.inverted_val_X,]
@@ -183,7 +166,7 @@ class ArtistConvNet:
                         for i in range(len(sets)):
                             preds = session.run(test_prediction,
                                 feed_dict={tf_test_dataset: sets[i], dropout_keep_prob : 1.0})
-                            print('Accuracy on', set_names[i], 'data: %.1f%%' % accuracy(preds, self.val_Y))
+                            mprint('Accuracy on', set_names[i], 'data: %.1f%%' % accuracy(preds, self.val_Y))
 
                             # save final preds to make confusion matrix
                             if i == 0:
@@ -193,7 +176,7 @@ class ArtistConvNet:
             self.train_model = train_model
 
     def load_pickled_dataset(self, pickle_file):
-        print ("Loading datasets...")
+        mprint ("Loading datasets...")
         with open(pickle_file, 'rb') as f:
             save = pickle.load(f)
             self.train_X = save['train_data']
@@ -205,9 +188,9 @@ class ArtistConvNet:
                 self.test_X = save['test_data']
                 self.test_Y = save['test_labels']
             del save  # hint to help gc free up memory
-        print('Training set', self.train_X.shape, self.train_Y.shape)
-        print('Validation set', self.val_X.shape, self.val_Y.shape)
-        if INCLUDE_TEST_SET: print('Test set', self.test_X.shape, self.test_Y.shape)
+        mprint('Training set', self.train_X.shape, self.train_Y.shape)
+        mprint('Validation set', self.val_X.shape, self.val_Y.shape)
+        if INCLUDE_TEST_SET: mprint('Test set', self.test_X.shape, self.test_Y.shape)
 
     def load_invariance_datasets(self):
         with open(DATA_PATH + 'invariance_art_data.pickle', 'rb') as f:
@@ -224,18 +207,20 @@ class ArtistConvNet:
 def weight_decay_penalty(weights, penalty):
     return penalty * sum([tf.nn.l2_loss(w) for w in weights])
 
+
 def accuracy(predictions, labels):
   return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
           / predictions.shape[0])
 
+
 if __name__ == '__main__':
     invariance = False
     if len(sys.argv) > 1 and sys.argv[1] == 'invariance':
-        print("Testing finished model on invariance datasets!")
+        mprint("Testing finished model on invariance datasets!")
         invariance = True
 
     t1 = time.time()
     conv_net = ArtistConvNet(invariance=invariance)
     conv_net.train_model()
     t2 = time.time()
-    print("Finished training. Total time taken:", t2-t1)
+    mprint("Finished training. Total time taken:", t2 - t1)
