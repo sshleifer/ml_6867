@@ -12,13 +12,13 @@ IMAGE_SIZE = 50
 NUM_CHANNELS = 3
 NUM_LABELS = 11
 INCLUDE_TEST_SET = False
-VERBOSE = True
+VERBOSE = False
 LOG = []
-
 
 def mprint(*args, **kwargs):
     if VERBOSE:
         print(*args, **kwargs)
+
 
 
 class ArtistConvNet:
@@ -41,6 +41,13 @@ class ArtistConvNet:
         '''Initialize the class by loading the required datasets
         and building the graph'''
         self.load_pickled_dataset(DATA_FILE)
+        last_val_accuracy = 0.
+        def mprint(*args, **kwargs):
+            if VERBOSE:
+                try:
+                    print(*args, **kwargs)
+                except:
+                    pass
         self.invariance = invariance
         if invariance:
             self.load_invariance_datasets()
@@ -104,6 +111,7 @@ class ArtistConvNet:
                                        strides=[1, layer2_pool_stride, layer2_pool_stride, 1],
                                         padding='SAME', name='pool2')
 
+
                 # Layer 3
                 shape = hidden.get_shape().as_list()
                 reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2] * shape[3]])
@@ -153,10 +161,17 @@ class ArtistConvNet:
                             train_preds = session.run(train_prediction, feed_dict={tf_train_dataset: self.train_X,
                                                                            dropout_keep_prob : 1.0})
                             val_preds = session.run(valid_prediction, feed_dict={dropout_keep_prob : 1.0})
+                            val_accuracy =  accuracy(val_preds, self.val_Y)
+                            train_accuracy =  accuracy(train_preds, self.train_Y)
+                            last_val_accuracy = val_accuracy
+
                             mprint('Batch loss at step %d: %f' % (step, l))
                             mprint('Batch training accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-                            mprint('Validation accuracy: %.1f%%' % accuracy(val_preds, self.val_Y))
-                            mprint('Full train accuracy: %.1f%%' % accuracy(train_preds, self.train_Y))
+                            mprint('Validation accuracy: %.1f%%' % val_accuracy)
+                            mprint('Full train accuracy: %.1f%%' % train_accuracy)
+                            if step > 600 & last_val_accuracy >= val_accuracy:
+                                mprint('Stopping early')
+                                break
 
                     # This code is for the final question
                     if self.invariance:
@@ -166,16 +181,17 @@ class ArtistConvNet:
                                 self.inverted_val_X,]
                         set_names = ['normal validation', 'translated', 'brightened', 'darkened',
                                      'high contrast', 'low contrast', 'flipped', 'inverted']
-
+                        test_acc = []
                         for i in range(len(sets)):
                             preds = session.run(test_prediction,
                                 feed_dict={tf_test_dataset: sets[i], dropout_keep_prob : 1.0})
-                            mprint('Accuracy on', set_names[i], 'data: %.1f%%' % accuracy(preds, self.val_Y))
-
+                            test_acc.append(accuracy(preds, self.val_Y))
                             # save final preds to make confusion matrix
                             if i == 0:
                                 self.final_val_preds = preds
-                return val_accuracy
+
+                        return train_accuracy, val_accuracy, test_acc
+                return train_accuracy, val_accuracy
             # save train model function so it can be called later
             self.train_model = train_model
             self.log = LOG

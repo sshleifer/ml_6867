@@ -38,7 +38,8 @@
 SoftMax output layer guarantees that we output probabilities that
 sum to 1. Cross-entropy loss allows the derivative of loss w.r.t weights
 to be nicely defined {[}GUESS{]} Random weights with variance \textgreater{}
-.5 tend to produce divergence
+.5 tend to produce divergence. Increasing hidden nodes from 3 to 9
+greatly improved accuracy to 92\%!
 
 \subsubsection*{2. Convolutional Neural Nets}
 
@@ -46,35 +47,89 @@ In this section, we test the performance of different convolutional
 architectures on the task of identifying which artist painted an image.
 Our initial architecture is a four layer net, with two convolutional
 layers followed by a normal hidden layer followed by the output layer.
-Each hidden layer has 64 nodes, and uses relu \$\textbackslash{}max(x,
-0)\$ as an activation function. The output layer maps the final hidden
-layer to probailities using softmax, with loss measured by avg. cross
-entropy accross the predicted probabilities, and optimization with
-gradient descent. The dataset includes 451 RGB images (downsampled
-to 50x50) from 11 different artists. The intial architecture scores
-\textasciitilde{}100\% on training data and roughly 67\% on validation
-data, suggesting overfitting.
+Each hidden layer has 64 nodes, and uses RELU $max(x,0)$ as an activation
+function. The output layer maps the final hidden layer to probailities
+using softmax, with loss measured by avg. cross entropy accross the
+predicted probabilities, and optimization with gradient descent. The
+dataset includes 451 RGB images (downsampled to 50x50) from 11 different
+artists. The intial architecture scores 92\% on training data and
+64 on validation data, suggesting overfitting. 
 
-\textbf{Receptive Field: }The convolutional filters are of size 5
-so the average neuron in layer 2 ``sees'' 5x5 =25 pixels (at depth
-3), if we follow that with a 3x3 filter, it will see 9 x 25 =225 pixels
-(before multiplying by 3 for RGB \textbf{GUESS}
+\paragraph{Background on Regularization Parameters}
 
-depth of output -\textgreater{} num filters
+We now experiment with different architectures and regularization
+techniques to try to improve our validation accuracy. One caveat:
+given the randomness involved in our training procedure, each reported
+score is the average validation accuracy across 5 separate runs, and
+small differences in score should not be interpreted as overly conclusive.\textbf{
+Early Stopping}, where we stop training when our validation accuracy
+stops increasing, does not help accuracy very much but makes experiments
+run quickly, so we use it throughout.
 
-{*}{*}Accuracy Table{*}{*}
+In order to reduce the number of parameters required of the intermediate
+and later layers of the network, we tried a few techniques.
 
-In this case, the input pixels only contribute information to the
-fully connected layers through the convolutional filters. So it is
-the neurons in the final feature map produced by the convolutional
-layers that are fully connected to neurons in the next hidden layer. 
+\textbf{Max pooling,} is a dimensionality reduction technique where
+we take the max of the inputs, which are usually conv filters. Max
+pooling only compresses the width and height dimensions, leaving depth
+unchanged. As computing has become cheaper, pooling has fallen out
+of favor, since it destroys information, but it might help combat
+the overfitting afflicting the baseline architecture. Adding pooling
+layers with stride=1 and filter\_size=2 after our two convolutional
+layers does not change our validation score very much, but reduces
+in-sample accuracy from 92\% to 82\%.
 
-Receptive Field: if we have a 50x50 image followed by a 
+\textbf{Weight Decay} for convolutional nets functions similarly to
+regularization for simpler neural networks and linear models; we add
+an L2 penalty on the weights to the loss function to avoid overfitting.
+The squared term in the L2 penalty has the added benefit of discouraging
+extremely large weights, thereby encouraging neurons to use each of
+their inputs a bit rather that relying on only 1. Unfortunately, adding
+a small weight decay penalty provides improvement only if we do not
+use pooling, and only for weight\_decay penalty \textless{}= .03.
+For larger weight penalties, we start underfitting.
 
-1. Receptive Field
 
-2. 
+\begin{tabular}
+{lrr} \toprule {} &  Pooling &  No Pooling \\ Weight Decay Penalty &          &             \\ \midrule 0.00                 &    0.699 &       0.641 \\ 0.01                 &    0.694 &       0.671 \\ 0.02                 &    0.667 &       0.653 \\ 0.03                 &    0.664 &       0.669 \\ 0.04                 &    0.683 &       0.667 \\ 0.05                 &    0.660 &       0.667 \\ 0.06                 &    0.674 &       0.667 \\ 0.07                 &    0.653 &       0.651 \\ 0.08                 &    0.634 &       0.648 \\ 0.09                 &    0.621 &       0.644 \\ 0.10                 &    0.602 &       0.662 \\ 0.11                 &    0.582 &       0.660 \\ 0.12                 &    0.586 &       0.630 \\ 0.13                 &    0.589 &       0.616 \\ 0.14                 &    0.556 &       0.614 \\ \bottomrule 
+\end{tabular}s
 
-layer 1 shape {[}10, 7, 7, 16{]} layer 1 shape {[}87, 7, 7, 16{]}
-layer 1 shape {[}87, 7, 7, 16{]}
+In the \textbf{Dropout }procedure, neurons maybe kept at each stage
+of training with some keep-probability $p$, otherwise they are dropped
+out before the reduced networks is trained and updated. Dropout aims
+to reduce co-adaptative relationships between neurons that do not
+generalize to unseen data. Given the noise generated by the randomness
+from our experimental data, it is unclear whether or not dropout helps
+our accuracy if we are already using pooling. For $keep-prob$ $<$$.85$,
+performance appears to suffer. For $keep-prob$ \textgreater{}=$.85$,
+performance appears to be similar to no dropout at all. If we do not
+use pooling, however, dropout is more demonstrably beneficial, with
+$keep-prob$ =$.85$ generating a 67.8\% average. Lower keep probabilities,
+however, seem to cause underfitting and poor performance.
+
+There is also some evidence that pooling allows us to use larger filter
+sizes in Layer 1. As shown in the table below, validation accuracy
+improves as we increase the size of the initial filter, while train
+accuracy stays reasonably consistent. Without pooling, performance
+does not improve. Since the second layer's filter was fixed at 5x5x16
+throughout the experiment, the results also suggest that an architecture
+with wider first layers and smaller second layers may be beneficial.
+An attempt at preserving that shape while increasing the depth of
+layer two, in the more classic pyramidal architecture, did not yield
+results.
+
+\begin{tabular}{lrr} \toprule {} &  Train Accuracy &  Validation Accuracy \\ Layer 1 Filter Size &                 &                      \\ \midrule 1                   &              83 &                   63 \\ 2                   &              85 &                   66 \\ 3                   &              86 &                   67 \\ 4                   &              80 &                   66 \\ 5                   &              86 &                   71 \\ 6                   &              84 &                   72 \\ 7                   &              86 &                   74 \\ 8                   &              86 &                   71 \\ 9                   &              85 &                   72 \\ \bottomrule \end{tabular} 
+
+\subsubsection*{Optimal Architecture}
+
+After much trial and error, our optimal architecture involved 128
+hidden nodes in the fully connected layer right before the output,
+max pooling after each Convolutional layer, and a deeper layer2\_depth=32
+and layer1\_filter\_size=8. This had the desirable pyramidal shape,
+as well as enough regularization to avoid horrendous overfitting.
+The CNN was still overfit, with in-sample score 87\% and Validation
+score 73\%, and did not perform much better than the given CNN on
+the Transformed data.
+
+\begin{tabular}{lr} \toprule {} &  Test Accuracy \\ Transformation    &                \\ \midrule inverted          &              6 \\ brightened        &             35 \\ high contrast     &             35 \\ translated        &             38 \\ flipped           &             44 \\ darkened          &             54 \\ low contrast      &             54 \\ normal validation &             66 \\ \bottomrule \end{tabular}
 \end{document}
