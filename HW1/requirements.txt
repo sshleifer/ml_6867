@@ -1,6 +1,6 @@
 scipy==0.16.0
 Flask==0.10.1
-Jinja2==2.7.2
+Jinja2==2.11.3
 MarkupSafe==0.18
 PAM==0.1.4
 PyYAML==3.10
