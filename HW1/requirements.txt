@@ -4,7 +4,7 @@ Jinja2==2.7.2
 MarkupSafe==0.18
 PAM==0.1.4
 PyYAML==3.10
-Pygments==2.0.2
+Pygments==2.7.4
 SQLAlchemy==1.0.8
 Sphinx==1.2.2
 Werkzeug==0.10.4
