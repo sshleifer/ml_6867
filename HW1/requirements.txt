@@ -33,7 +33,7 @@ ipdb==0.8.1
 ipykernel==4.0.3
 ipython-genutils==0.1.0
 ipython-sql==0.3.6
-ipython==4.0.0
+ipython==7.16.3
 ipywidgets==4.0.2
 itsdangerous==0.24
 jsonpatch==1.3
